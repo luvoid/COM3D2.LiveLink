@@ -46,7 +46,7 @@ namespace COM3D2.LiveLink
 			}
 		}
 
-		public void WaitForConnection(int timeout = 1000)
+		public void WaitForConnection(int timeout = -1)
 		{
 			if (IsServer)
 			{
@@ -112,8 +112,8 @@ namespace COM3D2.LiveLink
 			m_ServerConnection?.Dispose();
 			m_ServerConnection = null;
 		}
-	
-	
+
+
 		private bool AssertCanWrite(string methodName, bool printError = true)
 		{
 			if (m_ServerConnection == null)
@@ -169,8 +169,8 @@ namespace COM3D2.LiveLink
 
 		~LiveLinkCore()
 		{
-		    // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-		    Dispose(disposing: false);
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: false);
 		}
 
 		public void Dispose()

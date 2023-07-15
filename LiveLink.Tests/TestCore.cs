@@ -80,6 +80,17 @@ namespace COM3D2.LiveLink.Tests
 			clientCore.WaitForConnection();
 
 			serverCLI.StandardInput.WriteLine($"waitfor --connection --time 1");
+			Assert.IsTrue(clientCore.IsConnected);
+		}
+
+		public void StartServerCoreAndClientCLI(out LiveLinkCore serverCore, out Process clientCLI)
+		{
+			serverCore = CreateServer();
+			clientCLI = CreateClientProcess(serverCore.Address);
+
+			serverCore.WaitForConnection(1000);
+
+			Assert.IsTrue(serverCore.IsConnected);
 		}
 
 		[TestMethod]
@@ -281,6 +292,62 @@ namespace COM3D2.LiveLink.Tests
 				Assert.That.StreamsAreEqual(fileStream, message);
 			}
 		}
+
+
+		[TestMethod]
+		public void TestServerCLIDisconnect()
+		{
+			StartClientCoreAndServerCLI(out LiveLinkCore clientCore, out Process serverCLI);
+
+			Console.WriteLine($"clientCore.IsConnected = {clientCore.IsConnected}");
+
+			serverCLI.StandardInput.WriteLine("disconnect");
+
+			System.Threading.Thread.Sleep(100);
+
+			clientCore.ReadAll();
+
+			Console.WriteLine($"clientCore.IsConnected = {clientCore.IsConnected}");
+			Assert.IsFalse(clientCore.IsConnected);
+
+			StopCLIProcess(serverCLI);
+			Assert.That.ExitZero(serverCLI);
+		}
+
+		[TestMethod]
+		public void TestServerCLIUnexpectedDisconnect()
+		{
+			StartClientCoreAndServerCLI(out LiveLinkCore clientCore, out Process serverCLI);
+
+			StopCLIProcess(serverCLI);
+
+			Assert.That.ExitZero(serverCLI);
+			Assert.IsFalse(clientCore.IsConnected);
+		}
+
+		[TestMethod]
+		public void TestServerCoreDisconnect()
+		{
+			StartServerCoreAndClientCLI(out LiveLinkCore serverCore, out Process clientCLI);
+
+			clientCLI.StandardInput.WriteLine("isconnected");
+
+			//System.Threading.Thread.Sleep(100);
+
+			serverCore.Disconnect();
+
+			clientCLI.StandardInput.WriteLine("isconnected");
+
+			StopCLIProcess(clientCLI);
+
+			Console.WriteLine("Client Output - - - - - - - - -");
+			Console.WriteLine(clientCLI.StandardOutput.ReadAllAvailable());
+			Console.WriteLine(clientCLI.StandardError.ReadAllAvailable());
+			Console.WriteLine("- - - - - - - - - - - - - - - -");
+
+			Assert.That.ExitZero(clientCLI);
+		}
+
 
 
 		void AssertContains(string output, string mustContain)

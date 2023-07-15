@@ -7,6 +7,7 @@ using System.Net;
 using System.IO;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 
 namespace COM3D2.LiveLink
 {
@@ -41,9 +42,22 @@ namespace COM3D2.LiveLink
 			);
 		}
 
-		bool TryConnect(int timeout = 0)
+		bool TryConnect(int timeout = 1000)
 		{
-			m_ClientPipe.Connect(timeout);
+			try
+			{
+				m_ClientPipe.Connect(timeout);
+			}
+			catch (TimeoutException ex)
+			{
+				Console.Error.WriteLine($"Failed to connect to LiveLink server. (Timeout)\n{ex.Message}");
+				return false;
+			}
+			catch (Win32Exception ex)
+			{
+				Console.Error.WriteLine($"Failed to connect to LiveLink server. (OS Error)\n{ex.Message}");
+			}
+
 			if (m_ClientPipe.IsConnected)
 			{
 				Console.WriteLine("Connected to LiveLink server!");
@@ -85,7 +99,6 @@ namespace COM3D2.LiveLink
 				{
 					readCount += m_ClientPipe.Read(buffer, readCount, messageLength - readCount);
 				}
-				Console.WriteLine($"Read {readCount} bytes from client connection");
 				//int readCount = m_ClientPipe.Read(message.GetBuffer(), 0, (int)message.Length);
 				MemoryStream message = new MemoryStream(buffer, 0, messageLength, false, true);
 				m_InMessageQueue.Enqueue(message);
@@ -122,6 +135,9 @@ namespace COM3D2.LiveLink
 
 		protected override void OnDispose(bool disposing)
 		{
+			// Stop threads
+			m_ReadThread?.Abort();
+
 			if (disposing)
 			{
 				// Free managed resources
@@ -129,9 +145,6 @@ namespace COM3D2.LiveLink
 				m_ClientPipe = null;
 				m_InMessageQueue = null;
 			}
-
-			// Stop threads
-			m_ReadThread?.Abort();
 
 			// Free unmanaged resources
 			// ...

@@ -13,7 +13,6 @@ namespace COM3D2.LiveLink.Plugin
 		void Update()
 		{
 			TargetFirstMaid();
-			UpdateMaidPositionOffset();
 		}
 
 		void TargetFirstMaid()
@@ -22,20 +21,9 @@ namespace COM3D2.LiveLink.Plugin
 			TargetMaid = GameObject.FindObjectOfType<Maid>();
 		}
 
-		void UpdateMaidPositionOffset()
-		{
-			if (TargetMaid == null) return;
-			TargetMaid.gameObject.transform.localPosition = m_MaidPositionOffset;
-		}
-
-		private Vector3 m_MaidPositionOffset = Vector3.zero;
-		public static void SetMaidPositionOffset(Vector3 offset)
-		{
-			Instance.m_MaidPositionOffset = offset;
-		}
-
 		internal static void SetAnimation(byte[] anmData)
 		{
+			TargetMaid.body0.GetAnimation().Stop();
 			TargetMaid.body0.CrossFade("LiveLinkAnimator", anmData, loop: true, fade: 0.1f);
 		}
 	}

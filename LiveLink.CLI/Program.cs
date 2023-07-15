@@ -51,6 +51,18 @@ namespace COM3D2.LiveLink.CLI
 
 				new LambdaCommand("flush", () => Core.Flush()),
 
+				new LambdaCommand("isconnected", () =>
+				{
+					Console.WriteLine(Core.IsConnected);
+				}),
+
+				new LambdaCommand("disconnect", () =>
+				{
+					Console.WriteLine("Disconnecting LiveLink...");
+					Core.Disconnect();
+					Console.WriteLine("Disconnected.");
+				}),
+
 				new LambdaCommand("exit", () =>
 				{
 					Console.WriteLine("Exiting COM3D2 LiveLink CLI");

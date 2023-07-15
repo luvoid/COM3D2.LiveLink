@@ -14,7 +14,6 @@ using System.Security.Permissions;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
-using static RootMotion.FinalIK.InteractionObject;
 
 
 // If there are errors in the above using statements, restore the NuGet packages:
@@ -77,6 +76,9 @@ namespace COM3D2.LiveLink.Plugin
 		public ConfigFile ConfigFile => base.Config;
 
 		private KeyboardShortcut m_StartClientShortcut = new KeyboardShortcut(KeyCode.L, KeyCode.LeftControl);
+		private KeyboardShortcut m_DisconnectShortcut = new KeyboardShortcut(KeyCode.L, KeyCode.LeftControl, KeyCode.LeftAlt);
+
+		private bool m_IsExpectConnected = false;
 
 		private void Awake()
 		{
@@ -97,23 +99,55 @@ namespace COM3D2.LiveLink.Plugin
 
 		private void StartClient()
 		{
-			m_Core.StartClient(Config.ServerAddress);
+			if (m_Core.StartClient(Config.ServerAddress))
+			{
+				GameMain.Instance.SysDlg.Show("Connected to LiveLink server.", SystemDialog.TYPE.OK);
+				m_IsExpectConnected = true;
+			}
+			else
+			{
+				GameMain.Instance.SysDlg.Show("Could not connect to LiveLink server.", SystemDialog.TYPE.OK);
+			}
+		}
+
+		private void DisconnectClient()
+		{
+			Logger.LogInfo("Disconnecting");
+			m_Core.Disconnect();
+			GameMain.Instance.SysDlg.Show("Disconnected from LiveLink server.", SystemDialog.TYPE.OK);
+			m_IsExpectConnected = false;
 		}
 
 		private void Update()
 		{
-			SafeUpdate();
-		}
+			CheckUnexpectedDisconnect();
 
-		private void SafeUpdate()
-		{
 			if (m_Core.IsConnected)
 			{
 				ClientUpdate();
 			}
-			else if (m_StartClientShortcut.IsPressed())
+
+			if (GameMain.Instance.SysDlg.IsDecided)
 			{
-				StartClient();
+				if (!m_Core.IsConnected && m_StartClientShortcut.IsDown())
+				{
+					StartClient();
+				}
+				else if (m_Core.IsConnected && m_DisconnectShortcut.IsDown())
+				{
+					DisconnectClient();
+				}
+			}
+		}
+
+		private void CheckUnexpectedDisconnect()
+		{
+			Logger.LogDebug($"{m_IsExpectConnected} && !{m_Core.IsConnected}");
+			if (m_IsExpectConnected && !m_Core.IsConnected)
+			{
+				GameMain.Instance.SysDlg.Show("Connection to LiveLink server has been lost.", SystemDialog.TYPE.OK);
+				m_Core.Disconnect();
+				m_IsExpectConnected = false;
 			}
 		}
 
@@ -135,23 +169,11 @@ namespace COM3D2.LiveLink.Plugin
 		{
 			CM3D2Serializer serializer = new CM3D2Serializer();
 			string command = serializer.Deserialize<string>(message);
-			Logger.LogInfo($"Handle Message: {command}");
+			Logger.LogDebug($"HandleMessage {command}");
 			if (command == "CM3D2_ANIM")
 			{
 				LiveLinkAnimator.SetAnimation(message.GetBuffer());
 			}
-		}
-
-		// Basic harmony patch format. You specify the class to be patched and the method within that class to be patched.
-		[HarmonyPatch(typeof(SceneEdit), "Awake")]
-		// This patcher prefixes the method, meaning it runs before the patched method does.
-		[HarmonyPrefix]
-		// You can also postfix, run after the method patches and do lots of things like change parameters
-		// and results with harmony patching. Very powerful.
-		private static void SceneEdit_Awake_Prefix()
-		{
-			// Do something before SceneEdit.Awake()
-			Logger.LogInfo("Hello SceneEdit!");
 		}
 
 	}

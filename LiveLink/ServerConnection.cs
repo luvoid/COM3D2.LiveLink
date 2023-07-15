@@ -17,7 +17,7 @@ namespace COM3D2.LiveLink
 
 		protected override PipeStream Pipe => m_ServerPipe;
 		public override bool CanRead => m_ServerPipe != null && m_ServerPipe.CanRead;
-		public override bool CanWrite => m_ServerPipe != null && m_ServerPipe.CanWrite;
+		public override bool CanWrite => m_ServerPipe != null && m_ServerPipe.CanWrite && m_ServerPipe.IsConnected;
 
 		private NamedPipeServerStream m_ServerPipe;
 		Thread m_WriteThread;
@@ -100,16 +100,17 @@ namespace COM3D2.LiveLink
 
 		protected override void OnDispose(bool disposing)
 		{
+			// Stop threads
+			m_WriteThread?.Abort();
+
 			if (disposing)
 			{
 				// Free managed resources
+				m_ServerPipe.Disconnect();
 				m_ServerPipe.Dispose();
 				m_ServerPipe = null;
 				m_OutMessageQueue = null;
 			}
-
-			// Stop threads
-			m_WriteThread?.Abort();
 
 			// Free unmanaged resources
 			// ...
