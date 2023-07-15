@@ -17,26 +17,15 @@ using UnityEngine.UI;
 
 
 // If there are errors in the above using statements, restore the NuGet packages:
-// 1. Left-click on the BlenderLiveLink Project in the Solution Explorer (not BlenderLiveLink.cs)
-// 2. In the pop-up context menu, click on "Manage NuGet Packages..."
-// 3. In the top-right corner of the NuGet Package Manager, click "restore"
-
-
-// You can add references to another BepInEx plugin:
-// 1. Left-click on the BlenderLiveLink Project's references in the Solution Explorer
-// 2. Select the "Add Reference..." context menu option.
-// 3. Expand the "Assemblies" tab group, and select the "Extensions" tab
-// 4. Choose your assemblies then select "Ok"
-// 5. Be sure to select each of the added references in the solution explorer,
-//    then in the properties window, set "Copy Local" to false.
-
+// 1. Right-click on the COM3D2.LiveLink Solution in the Solution Explorer (not a project or a .cs file)
+// 2. In the pop-up context menu, click on "Restore NuGet Packages"
 
 
 // This is the major & minor version with an asterisk (*) appended to auto increment numbers.
 [assembly: AssemblyVersion(COM3D2.LiveLink.Plugin.PluginInfo.PLUGIN_VERSION + ".*")]
+[assembly: AssemblyFileVersion(COM3D2.LiveLink.Plugin.PluginInfo.PLUGIN_VERSION + ".0.0")]
 
-// These two lines tell your plugin to not give a flying fuck about accessing private variables/classes whatever.
-// It requires a publicized stubb of the library with those private objects though. 
+// These two lines tell the compiler not worry about accessing private variables/classes.
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
@@ -92,7 +81,7 @@ namespace COM3D2.LiveLink.Plugin
 
 			this.gameObject.AddComponent<LiveLinkAnimator>();
 
-			Logger.LogInfo("Live Link Loaded");
+			Logger.LogInfo("LiveLink Plugin Loaded");
 
 			Tests.PluginTests.RunTestsInCommandline();
 		}
@@ -142,7 +131,7 @@ namespace COM3D2.LiveLink.Plugin
 
 		private void CheckUnexpectedDisconnect()
 		{
-			Logger.LogDebug($"{m_IsExpectConnected} && !{m_Core.IsConnected}");
+			//Logger.LogDebug($"{m_IsExpectConnected} && !{m_Core.IsConnected}");
 			if (m_IsExpectConnected && !m_Core.IsConnected)
 			{
 				GameMain.Instance.SysDlg.Show("Connection to LiveLink server has been lost.", SystemDialog.TYPE.OK);
