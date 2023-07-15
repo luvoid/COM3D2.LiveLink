@@ -30,7 +30,7 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -53,10 +53,6 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="COM3D2.API, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\COM3D2\COM3D2x64_Data\Managed\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System">
       <Private>False</Private>
     </Reference>
@@ -103,28 +99,9 @@
     <Compile Include="Tests\PluginTests.cs" />
     <Compile Include="LiveLinkAnimator.cs" />
     <Compile Include="LiveLinkPluginConfig.cs" />
-    <Compile Include="Old\JsonStructs\AnmJson.cs" />
-    <Compile Include="Old\JsonStructs\AnmJsonBoneData.cs" />
-    <Compile Include="Old\JsonStructs\AnmJsonChannelData.cs" />
-    <Compile Include="Old\JsonStructs\AnmJsonData.cs" />
-    <Compile Include="Old\JsonStructs\AnmJsonFrameData.cs" />
-    <Compile Include="Old\LiveLinkSKAnimator.cs" />
-    <Compile Include="Old\Core.cs" />
-    <Compile Include="Old\Hooks.cs" />
-    <Compile Include="Old\LiveLinkRecorder.cs" />
-    <Compile Include="Old\LiveLinkMenu.cs" />
     <Compile Include="InternalSingleton.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="LiveLinkPlugin.cs" />
-    <Compile Include="Old\Structs\NewAnm.cs" />
-    <Compile Include="Old\Structs\NewAnmBone.cs" />
-    <Compile Include="Old\Structs\NewAnmFrame.cs" />
-    <Compile Include="Old\Structs\NewAnmSks.cs" />
-    <Compile Include="Old\Structs\NewAnmWriteBone.cs" />
-    <Compile Include="Old\UIHelper.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Old\AnmGearIcom.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\CM3D2.Serialization\CM3D2.Serialization\CM3D2.Serialization.csproj">
