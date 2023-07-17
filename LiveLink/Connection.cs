@@ -10,7 +10,7 @@ namespace COM3D2.LiveLink
 	{
 		protected abstract PipeStream Pipe { get; }
 
-		public bool IsConnected => Pipe != null && Pipe.IsConnected;
+		public virtual bool IsConnected => Pipe != null && Pipe.IsConnected;
 
 		public abstract bool CanRead { get; }
 		public abstract bool CanWrite { get; }

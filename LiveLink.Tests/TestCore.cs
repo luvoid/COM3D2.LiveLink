@@ -3,6 +3,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace COM3D2.LiveLink.Tests
 {
@@ -70,17 +72,21 @@ namespace COM3D2.LiveLink.Tests
 			return cliProcess.ExitCode;
 		}
 
-		public void StartClientCoreAndServerCLI(out LiveLinkCore clientCore, out Process serverCLI)
+		public void StartClientCoreAndServerCLI(out LiveLinkCore clientCore, out Process serverCLI, out string address)
 		{
-			serverCLI = CreateServerProcess(out string address);
+			serverCLI = CreateServerProcess(out address);
 			Console.WriteLine($"address = {address}");
 
 			clientCore = new LiveLinkCore();
 			Assert.IsTrue(clientCore.StartClient(address), "Failed to connect client to server.");
-			clientCore.WaitForConnection();
 
 			serverCLI.StandardInput.WriteLine($"waitfor --connection --time 1");
 			Assert.IsTrue(clientCore.IsConnected);
+		}
+
+		public void StartClientCoreAndServerCLI(out LiveLinkCore clientCore, out Process serverCLI)
+		{
+			StartClientCoreAndServerCLI(out clientCore, out serverCLI, out string address);
 		}
 
 		public void StartServerCoreAndClientCLI(out LiveLinkCore serverCore, out Process clientCLI)
@@ -88,9 +94,7 @@ namespace COM3D2.LiveLink.Tests
 			serverCore = CreateServer();
 			clientCLI = CreateClientProcess(serverCore.Address);
 
-			serverCore.WaitForConnection(1000);
-
-			Assert.IsTrue(serverCore.IsConnected);
+			Assert.IsTrue(serverCore.WaitForConnection(1000), "Client did not connect to server.");
 		}
 
 		[TestMethod]
@@ -104,7 +108,7 @@ namespace COM3D2.LiveLink.Tests
 			int exitCode = -1;
 			try
 			{
-				serverCore.WaitForConnection();
+				serverCore.WaitForConnection(1000);
 				serverCore.SendString(testString);
 				serverCore.Flush();
 
@@ -224,6 +228,34 @@ namespace COM3D2.LiveLink.Tests
 		}
 
 		[TestMethod]
+		public void TestServerWaitForConnectionTimeout()
+		{
+			LiveLinkCore serverCore = CreateServer();
+
+			var task = Task.Run(() => serverCore.WaitForConnection(10));
+			Assert.IsTrue(task.Wait(20));
+		}
+
+		[TestMethod]
+		public void TestServerListenForConnection()
+		{
+			LiveLinkCore serverCore = CreateServer();
+			Process clientCLI = CreateClientProcess(serverCore.Address);
+
+			Thread.Sleep(1000);
+
+			try
+			{
+				Assert.IsTrue(serverCore.IsConnected, "serverCore.IsConnected = false");
+			}
+			finally
+			{
+				StopCLIProcess(clientCLI);
+			}
+		}
+
+
+		[TestMethod]
 		public void TestSendFile()
 		{
 			LiveLinkCore serverCore = CreateServer();
@@ -275,14 +307,14 @@ namespace COM3D2.LiveLink.Tests
 			serverCLI.StandardInput.WriteLine($"send --file {filePath}");
 			serverCLI.StandardInput.WriteLine($"flush");
 
-			System.Threading.Thread.Sleep(100);
+			Thread.Sleep(100);
 
 			bool recieved = clientCore.TryReadMessage(out MemoryStream message);
 
 			clientCore.Dispose();
 			int exitCode = StopCLIProcess(serverCLI);
 			Console.WriteLine("Server Output - - - - - - - - -");
-			Console.Write(serverCLI.StandardOutput.ReadAllAvailable());
+			Console.WriteLine(serverCLI.StandardOutput.ReadAllAvailable());
 			Debug.Write(serverCLI.StandardError.ReadAllAvailable());
 			Console.WriteLine("- - - - - - - - - - - - - - - -");
 			Assert.That.ExitZero(serverCLI);
@@ -292,26 +324,29 @@ namespace COM3D2.LiveLink.Tests
 				Assert.That.StreamsAreEqual(fileStream, message);
 			}
 		}
-
-
+		
 		[TestMethod]
-		public void TestServerCLIDisconnect()
+		public void TestServerIsConnected()
 		{
-			StartClientCoreAndServerCLI(out LiveLinkCore clientCore, out Process serverCLI);
+			StartServerCoreAndClientCLI(out LiveLinkCore serverCore, out Process clientCLI);
 
-			Console.WriteLine($"clientCore.IsConnected = {clientCore.IsConnected}");
+			Console.WriteLine($"serverCore.IsConnected = {serverCore.IsConnected}");
 
-			serverCLI.StandardInput.WriteLine("disconnect");
+			clientCLI.StandardInput.WriteLine("disconnect");
 
-			System.Threading.Thread.Sleep(100);
+			Thread.Sleep(1000);
 
-			clientCore.ReadAll();
+			Console.WriteLine("Client Output - - - - - - - - -");
+			Console.WriteLine(clientCLI.StandardOutput.ReadAllAvailable());
+			Console.WriteLine("- - - - - - - - - - - - - - - -");
 
-			Console.WriteLine($"clientCore.IsConnected = {clientCore.IsConnected}");
-			Assert.IsFalse(clientCore.IsConnected);
+			StopCLIProcess(clientCLI);
+			Assert.That.ExitZero(clientCLI);
 
-			StopCLIProcess(serverCLI);
-			Assert.That.ExitZero(serverCLI);
+			Console.WriteLine($"serverCore.IsConnected = {serverCore.IsConnected}");
+			Assert.IsFalse(serverCore.IsConnected, "serverCore.IsConnected is still still true.");
+
+
 		}
 
 		[TestMethod]
@@ -326,7 +361,7 @@ namespace COM3D2.LiveLink.Tests
 		}
 
 		[TestMethod]
-		public void TestServerCoreDisconnect()
+		public void TestClientIsConnectedCLI()
 		{
 			StartServerCoreAndClientCLI(out LiveLinkCore serverCore, out Process clientCLI);
 
@@ -345,6 +380,71 @@ namespace COM3D2.LiveLink.Tests
 			Console.WriteLine(clientCLI.StandardError.ReadAllAvailable());
 			Console.WriteLine("- - - - - - - - - - - - - - - -");
 
+			Assert.That.ExitZero(clientCLI);
+		}
+
+		[TestMethod]
+		public void TestServerCrashing()
+		{
+			StartClientCoreAndServerCLI(out LiveLinkCore clientCore, out Process serverCLI, out string address);
+
+			for (int i = 0; i < 1; i++)
+			{
+				Console.WriteLine($"Attempt {i}");
+
+				// Crash area
+				serverCLI.StandardInput.WriteLine("disconnect");
+				while (clientCore.IsConnected)
+				{
+					Thread.Sleep(0);
+				}
+				if (serverCLI.HasExited) break;
+
+				// Reconnect for next attempt
+				clientCore.Disconnect();
+				serverCLI.StandardInput.WriteLine($"start --server {address}");
+				serverCLI.StandardInput.WriteLine($"waitfor --connection");
+				
+				bool connected = false;
+				for (int j = 0; j < 10; j++)
+				{
+					if (connected = clientCore.StartClient(address)) break;
+					Thread.Sleep(0);
+				}
+				if (serverCLI.HasExited) break;
+				Assert.IsTrue(connected, "Failed to connect client to server.");
+			}
+			StopCLIProcess(serverCLI);
+			Assert.That.ExitZero(serverCLI);
+		}
+
+		[TestMethod]
+		public void TestClientCrashingCLI()
+		{
+			StartServerCoreAndClientCLI(out LiveLinkCore serverCore, out Process clientCLI);
+
+			for (int i = 0; i < 100; i++)
+			{
+				Console.WriteLine($"Attempt {i}");
+
+				// Crash area
+				clientCLI.StandardInput.WriteLine("disconnect");
+				int j = 0;
+				while (serverCore.IsConnected && !clientCLI.HasExited)
+				{
+					if (j++ >= 300) break;
+					Thread.Sleep(1);
+				}
+				if (clientCLI.HasExited) break;
+				Assert.IsFalse(serverCore.IsConnected, "Client never disconnected");
+
+				// Reconnect for next attempt
+				serverCore.Disconnect();
+				serverCore.StartServer(serverCore.Address);
+				clientCLI.StandardInput.WriteLine($"start --client {serverCore.Address}");
+				Assert.IsTrue(serverCore.WaitForConnection(1000), "Client did not reconnect.");
+			}
+			StopCLIProcess(clientCLI);
 			Assert.That.ExitZero(clientCLI);
 		}
 

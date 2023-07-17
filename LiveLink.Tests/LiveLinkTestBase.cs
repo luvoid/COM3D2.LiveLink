@@ -19,7 +19,7 @@ namespace COM3D2.LiveLink.Tests
 			string address = GetProcessUniqueAddress();
 			LiveLinkCore serverCore = new LiveLinkCore();
 			serverCore.StartServer(address);
-			Console.WriteLine($"address = {serverCore.Address}");
+			//Console.WriteLine($"address = {serverCore.Address}");
 			return serverCore;
 		}
 

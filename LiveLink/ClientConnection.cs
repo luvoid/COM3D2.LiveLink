@@ -35,8 +35,8 @@ namespace COM3D2.LiveLink
 			m_ClientPipe = new NamedPipeClientStream(
 				serverName,
 				pipeName,
-				PipeAccessRights.ReadData | PipeAccessRights.WriteAttributes,
-				PipeOptions.Asynchronous,
+				PipeAccessRights.Read | PipeAccessRights.Write | PipeAccessRights.Delete,
+				PipeOptions.None,
 				System.Security.Principal.TokenImpersonationLevel.None,
 				HandleInheritability.None
 			);
@@ -57,11 +57,15 @@ namespace COM3D2.LiveLink
 			{
 				Console.Error.WriteLine($"Failed to connect to LiveLink server. (OS Error)\n{ex.Message}");
 			}
+			catch (IOException ex)
+			{
+				Console.Error.WriteLine($"Failed to connect to LiveLink server. (IO Error)\n{ex.Message}");
+			}
 
 			if (m_ClientPipe.IsConnected)
 			{
 				Console.WriteLine("Connected to LiveLink server!");
-				Console.WriteLine($"m_ClientPipe.ReadMode = {m_ClientPipe.ReadMode}");
+				//Console.WriteLine($"m_ClientPipe.ReadMode = {m_ClientPipe.ReadMode}");
 				Initialize();
 				return true;
 			}
@@ -141,6 +145,7 @@ namespace COM3D2.LiveLink
 			if (disposing)
 			{
 				// Free managed resources
+				Console.WriteLine("Closing client connection...");
 				m_ClientPipe.Dispose();
 				m_ClientPipe = null;
 				m_InMessageQueue = null;

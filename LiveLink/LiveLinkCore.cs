@@ -46,12 +46,14 @@ namespace COM3D2.LiveLink
 			}
 		}
 
-		public void WaitForConnection(int timeout = -1)
+		public bool WaitForConnection(int timeout = -1)
 		{
 			if (IsServer)
 			{
-				m_ServerConnection.WaitForConnection();
+				return m_ServerConnection.WaitForConnection(timeout);
 			}
+
+			return false;
 		}
 
 		public void SendString(string value)
@@ -67,7 +69,7 @@ namespace COM3D2.LiveLink
 
 		public void Flush()
 		{
-			m_ServerConnection.Flush();
+			m_ServerConnection?.Flush();
 		}
 
 		public void SendBytes(byte[] bytes)

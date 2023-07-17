@@ -23,7 +23,7 @@ using UnityEngine.UI;
 
 // This is the major & minor version with an asterisk (*) appended to auto increment numbers.
 [assembly: AssemblyVersion(COM3D2.LiveLink.Plugin.PluginInfo.PLUGIN_VERSION + ".*")]
-[assembly: AssemblyFileVersion(COM3D2.LiveLink.Plugin.PluginInfo.PLUGIN_VERSION + ".0.0")]
+[assembly: AssemblyFileVersion(COM3D2.LiveLink.Plugin.PluginInfo.PLUGIN_VERSION)]
 
 // These two lines tell the compiler not worry about accessing private variables/classes.
 [module: UnverifiableCode]
@@ -39,7 +39,7 @@ namespace COM3D2.LiveLink.Plugin
 		// The name of this plugin.
 		public const string PLUGIN_NAME = "LiveLink";
 		// The version of this plugin.
-		public const string PLUGIN_VERSION = "0.1";
+		public const string PLUGIN_VERSION = "1.0";
 	}
 }
 
@@ -124,7 +124,12 @@ namespace COM3D2.LiveLink.Plugin
 				}
 				else if (m_Core.IsConnected && m_DisconnectShortcut.IsDown())
 				{
-					DisconnectClient();
+					GameMain.Instance.SysDlg.Show(
+						"⚠️ WARNING ⚠️\n" +
+						"Disconnecting client may crash the server, the client, or both. " +
+						"This action is only safe if the server is already disconnected.\n\n" +
+						"Are you sure you want to try disconnecting?", 
+						SystemDialog.TYPE.YES_NO, DisconnectClient);
 				}
 			}
 		}

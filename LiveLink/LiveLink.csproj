@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -47,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientConnection.cs" />
+    <Compile Include="Concurrent\Concurrent.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="LiveLinkCore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
