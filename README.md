@@ -17,5 +17,5 @@ to update, control, and preview changes to animations in real-time.
 ## Installation
 - Download the [latest release](https://github.com/luvoid/COM3D2.LiveLink/releases)
 - Places contents of zip folder in `COM3D2/BepInEx/plugins`.
-- In-game, use `Ctrl` `L` to connect to server and `Ctrl` `Alt` `L` to disconnect from server. (Heed of the disconnect warning!)
+- In-game, use `Ctrl` `L` to connect to server and `Ctrl` `Alt` `L` to disconnect from server. (Heed the disconnect warning!)
 
