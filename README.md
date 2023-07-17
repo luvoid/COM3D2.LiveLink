@@ -2,7 +2,7 @@
 This plugin for COM3D2 allows communication with other programs (such as Blender)
 to update, control, and preview changes to animations in real-time.
 
-![Short Video Demo](https://twitter.com/i/status/1680766109438418945)
+[Short Video Demo](https://twitter.com/i/status/1680766109438418945)
 
 ## Requirements
 - The following requirements are included in the zip file:
