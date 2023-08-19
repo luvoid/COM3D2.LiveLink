@@ -31,11 +31,11 @@ namespace COM3D2.LiveLink
 			m_ServerConnection = ServerConnection.OpenConnection(Address);
 		}
 
-		public bool StartClient(string address = "com3d2.livelink")
+		public bool StartClient(string address = "com3d2.livelink", int timeout = 1000)
 		{
 			Address = address;
 			Console.WriteLine("Start LiveLink client");
-			if (ClientConnection.TryConnect(".", Address, out ClientConnection newConnection))
+			if (ClientConnection.TryConnect(".", Address, out ClientConnection newConnection, timeout))
 			{
 				m_ClientConnection = newConnection;
 				return true;
@@ -46,7 +46,7 @@ namespace COM3D2.LiveLink
 			}
 		}
 
-		public bool WaitForConnection(int timeout = -1)
+		public bool WaitForConnection(int timeout = System.Threading.Timeout.Infinite)
 		{
 			if (IsServer)
 			{

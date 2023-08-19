@@ -12,8 +12,8 @@ namespace COM3D2.LiveLink
 
 		public virtual bool IsConnected => Pipe != null && Pipe.IsConnected;
 
-		public abstract bool CanRead { get; }
-		public abstract bool CanWrite { get; }
+		public virtual bool CanRead => IsConnected && Pipe.CanRead;
+		public virtual bool CanWrite => IsConnected && Pipe.CanWrite;
 
 
 		protected bool IsDisposed { get; private set; } = false;

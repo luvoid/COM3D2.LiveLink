@@ -7,13 +7,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using COM3D2.LiveLink.Plugin.Tests;
+using Microsoft.Win32.SafeHandles;
+using Microsoft.Win32;
 
 namespace COM3D2.LiveLink.Tests
 {
 	[TestClass]
 	public class TestPlugin : LiveLinkTestBase
 	{
-		public const string COM3D2_EXE_PATH = "C:\\DJN\\KISS\\COM3D2\\COM3D2x64.exe";
+		public const string COM3D2_ROOT = @"C:\DJN\KISS\COM3D2\";
+		public const string COM3D2_EXE_PATH = $@"{COM3D2_ROOT}\COM3D2x64.exe";
+		public const string PLUGIN_OUT_PATH = $@"{COM3D2_ROOT}\BepInEx\{PluginTests.STD_OUT_FILE}";
+		public const string PLUGIN_ERR_PATH = $@"{COM3D2_ROOT}\BepInEx\{PluginTests.STD_ERR_FILE}";
+
 
 		public Process CreateCOM3D2Process(string commands, bool quit = true)
 		{
@@ -21,6 +27,7 @@ namespace COM3D2.LiveLink.Tests
 			{
 				commands += " -livelinkquit";
 			}
+			commands += " -logfile";
 
 			Process client = new Process();
 			client.StartInfo = new ProcessStartInfo(COM3D2_EXE_PATH, commands);
@@ -36,27 +43,39 @@ namespace COM3D2.LiveLink.Tests
 			return client;
 		}
 
+		public void WaitForConnectionOrFail(LiveLinkCore serverCore, Process game)
+		{
+			while (!serverCore.WaitForConnection(10))
+			{
+				if (game.HasExited)
+				{
+					Assert.That.ExitZero(game, PLUGIN_OUT_PATH, PLUGIN_ERR_PATH);
+					throw new AssertFailedException("The process exited without connecting to the server");
+				}
+			}
+		}
+
 		[TestMethod]
-		public void TestGameCLI()
+		public void GameCLI()
 		{
 			LiveLinkCore serverCore = CreateServer();
-			Process game = CreateCOM3D2Process($"-livelink:{serverCore.Address}");
-			serverCore.WaitForConnection();
+			Process game = CreateCOM3D2Process($"-livelink:{serverCore.Address} -livelinkcli");
+			WaitForConnectionOrFail(serverCore, game);
 
 			game.StandardInput.WriteLine("help");
 
 			game.StandardInput.WriteLine("exit");
 
 			serverCore.Dispose();
-			Assert.That.ExitZero(game);
+			Assert.That.ExitZero(game, PLUGIN_OUT_PATH, PLUGIN_ERR_PATH);
 		}
 
 		[TestMethod]
-		public void TestRecieveString()
+		public void RecieveString()
 		{
 			LiveLinkCore serverCore = CreateServer();
-			Process game = CreateCOM3D2Process($"-livelink:{serverCore.Address}");
-			serverCore.WaitForConnection();
+			Process game = CreateCOM3D2Process($"-livelink:{serverCore.Address} -livelinkcli");
+			WaitForConnectionOrFail(serverCore, game);
 
 			serverCore.SendString("Hello COM3D2!");
 
@@ -65,23 +84,17 @@ namespace COM3D2.LiveLink.Tests
 			game.StandardInput.WriteLine("exit");
 
 			serverCore.Dispose();
-			Assert.That.ExitZero(game);
+			Assert.That.ExitZero(game, PLUGIN_OUT_PATH, PLUGIN_ERR_PATH);
 		}
 
 		[TestMethod]
-		public void TestRecieveFile()
+		public void RecieveFile()
 		{
 			LiveLinkCore serverCore = CreateServer();
-			Process game = CreateCOM3D2Process($"-livelink:{serverCore.Address}");
-			serverCore.WaitForConnection();
+			Process game = CreateCOM3D2Process($"-livelink:{serverCore.Address} -livelinkcli");
+			WaitForConnectionOrFail(serverCore, game);
 
-			byte[] fileBytes;
-			using (var fileStream = new FileStream("Resources/T-Pose.anm", FileMode.Open, FileAccess.Read))
-			{
-				fileBytes = new byte[(int)fileStream.Length];
-				fileStream.Read(fileBytes, 0, fileBytes.Length);
-			}
-			serverCore.SendBytes(fileBytes);
+			serverCore.SendBytes(File.ReadAllBytes("Resources/T-Pose.anm"));
 			serverCore.Flush();
 
 			game.StandardInput.WriteLine("readall");
@@ -89,15 +102,37 @@ namespace COM3D2.LiveLink.Tests
 			game.StandardInput.WriteLine("exit");
 
 			serverCore.Dispose();
-			Assert.That.ExitZero(game);
+			Assert.That.ExitZero(game, PLUGIN_OUT_PATH, PLUGIN_ERR_PATH);
 		}
 
 		[TestMethod]
-		public void TestHandleMessage()
+		public void PluginInitialize()
+		{
+			Process game = CreateCOM3D2Process($"-livelinktest:{nameof(PluginTests.TestInitialize)}");
+			Assert.That.ExitZero(game, PLUGIN_OUT_PATH, PLUGIN_ERR_PATH);
+		}
+
+		[TestMethod]
+		public void HandleMessage()
+		{
+			Process game = CreateCOM3D2Process($"-livelinktest:{nameof(PluginTests.TestHandleMessage)}");
+			Assert.That.ExitZero(game, PLUGIN_OUT_PATH, PLUGIN_ERR_PATH);
+		}
+
+		[TestMethod]
+		public void RecieveModel()
 		{
 			LiveLinkCore serverCore = CreateServer();
-			Process game = CreateCOM3D2Process($"-livelinktest:{nameof(PluginTests.TestHandleMessage)}");
-			Assert.That.ExitZero(game);
+			Process game = CreateCOM3D2Process($"-livelink:{serverCore.Address} -livelinktest:{nameof(PluginTests.TestRecieveMessage)}", quit: true);
+			WaitForConnectionOrFail(serverCore, game);
+
+			serverCore.SendBytes(File.ReadAllBytes("Resources/body001.model"));
+
+			// Do it twice to test the refresh as well
+			serverCore.SendBytes(File.ReadAllBytes("Resources/body001.model"));
+
+			Assert.That.ExitZero(game, PLUGIN_OUT_PATH, PLUGIN_ERR_PATH);
+			//Assert.That.ExitZero(game, -1073741510, PLUGIN_OUT_PATH, PLUGIN_ERR_PATH);
 		}
 
 	}

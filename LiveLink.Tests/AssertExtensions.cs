@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -47,38 +48,63 @@ internal static class AssertExtensions
 		return stringBuilder.ToString(0, stringBuilder.Length - 1);
 	}
 
-	public static void ExitZero(this Assert _, Process process, int timeout)
+	public static void ExitZero(this Assert _, Process process, int timeout, string stdOutFile = null, string stdErrFile = null)
+	{
+		ExitCode(_, process, 0, timeout, stdOutFile, stdErrFile);
+	}
+
+	public static void ExitZero(this Assert _, Process process, string stdOutFile = null, string stdErrFile = null)
+	{
+		ExitCode(_, process, 0, stdOutFile, stdErrFile);
+	}
+
+	public static void ExitCode(this Assert _, Process process, int code, int timeout, string stdOutFile = null, string stdErrFile = null)
 	{
 		process.WaitForExit(timeout);
 		Assert.IsTrue(process.HasExited, $"Process {process.StartInfo.FileName} did not exit within the aloted timeout period");
-		Assert.That.ExitZero(process);
+		Assert.That.ExitCode(process, code, stdOutFile, stdErrFile);
 	}
 
-	public static void ExitZero(this Assert _, Process process)
+	public static void ExitCode(this Assert _, Process process, int code, string stdOutFile = null, string stdErrFile = null)
 	{
 		if (!process.HasExited)
 		{
 			process.WaitForExit();
 		}
 
+		string stdOut = "Could not retrieve standard output";
+		string stdErr = "Could not retrieve standard error";
+		if (process.StartInfo.RedirectStandardOutput)
+		{
+			stdOut = process.StandardOutput.ReadToEnd();
+		}
+		else if (stdOutFile != null)
+		{
+			stdOut = File.ReadAllText(stdOutFile);
+		}
+		if (process.StartInfo.RedirectStandardError)
+		{
+			stdErr = process.StandardError.ReadToEnd();
+		}
+		else if (stdErrFile != null)
+		{
+			stdErr = File.ReadAllText(stdErrFile);
+		}
+
 		try
 		{
-			Assert.IsTrue(process.ExitCode == 0, $"Process {process.StartInfo.FileName} exited with code {process.ExitCode}");
+			Assert.IsTrue(process.ExitCode == code, $"Process {process.StartInfo.FileName} exited with code {process.ExitCode}");
 		}
-		catch (Exception ex)
+		catch (AssertFailedException ex)
 		{
-			string stdError = "Could not retrieve standard error";
-			string stdOut = "Could not retrieve standard output";
-			if (process.StartInfo.RedirectStandardError)
-			{
-				stdError = process.StandardError.ReadToEnd();
-			}
-			if (process.StartInfo.RedirectStandardOutput)
-			{
-				stdOut = process.StandardOutput.ReadToEnd();
-			}
-			Console.WriteLine(stdOut);
-			throw new AssertFailedException($"{ex.Message}\n{stdError}", ex);
+			throw new AssertFailedException($"{ex.Message}\n{stdErr}", ex);
 		}
+		finally
+		{
+			Console.WriteLine(stdOut);
+		}
+		Console.Error.WriteLine(stdErr);
 	}
+
+
 }

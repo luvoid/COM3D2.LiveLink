@@ -19,8 +19,6 @@ namespace COM3D2.LiveLink
 
 		protected override PipeStream Pipe => m_ServerPipe;
 		public override bool IsConnected => base.IsConnected && !m_IsEndOfPipe;
-		public override bool CanRead => m_ServerPipe != null && m_ServerPipe.CanRead && IsConnected;
-		public override bool CanWrite => m_ServerPipe != null && m_ServerPipe.CanWrite && IsConnected;
 
 
 		private NamedPipeServerStream m_ServerPipe;
@@ -64,10 +62,11 @@ namespace COM3D2.LiveLink
 			m_ListenForConnectionTask = new Task<bool>(() =>
 			{
 				var r = m_ServerPipe.BeginWaitForConnection(null, null);
-				while (!r.IsCompleted && !m_IsStopListening)
+				while (!r.IsCompleted)// && !m_IsStopListening)
 				{
 					if (m_IsStopListening)
 					{
+						//Console.WriteLine($"m_IsStopListening = {m_IsStopListening}");
 						r.AsyncWaitHandle.Close();
 						break;
 					}
@@ -75,29 +74,57 @@ namespace COM3D2.LiveLink
 					{
 						m_ServerPipe.EndWaitForConnection(r);
 					}
-					Console.WriteLine(r.IsCompleted);
+					//Console.WriteLine(r.IsCompleted);
 				}
-				Console.WriteLine($"m_ServerPipe.IsConnected = {m_ServerPipe.IsConnected}");
+
+				if (!m_ServerPipe.IsConnected)
+				{
+					// I have no idea why, but calling it again
+					// fixes a bug that happens sometimes, where
+					// m_ServerPipe.IsConnected = False,
+					// even after a client has connected.
+					m_ServerPipe.WaitForConnection();
+				}
+
+				//Console.WriteLine($"m_ServerPipe.IsConnected = {m_ServerPipe.IsConnected}; r.IsCompleted = {r.IsCompleted}");
 				if (m_ServerPipe.IsConnected)
 				{
 					Initialize();
 					OnClientConnected?.Invoke(this);
 					return true;
 				}
+				else
+				{
+					// Find out why the connection failed
+					try
+					{
+						m_ServerPipe.WaitForConnection();
+						Console.Error.WriteLine($"m_ServerPipe.IsConnected = {m_ServerPipe.IsConnected}");
+						Console.Error.WriteLine($"{this} failed to wait for connection for an unknown reason.");
+					}
+					catch (Exception e) 
+					{
+						Console.Error.WriteLine($"{this} failed to wait for connection: {e}");
+					}
+				}
 				return false;
 			});
 			m_ListenForConnectionTask.Start();
 		}
 
-		public bool WaitForConnection(int timeout = -1)
+		public bool WaitForConnection(int timeout = Timeout.Infinite)
 		{
 			if (m_ListenForConnectionTask == null) 
 				ListenForConnection();
 
-			if (m_ListenForConnectionTask.IsCompleted) 
+			if (m_ListenForConnectionTask.IsCompleted)
 				return m_ListenForConnectionTask.Result;
 
-			if (!m_ListenForConnectionTask.Wait(timeout))
+			if (timeout < 0)
+			{
+				m_ListenForConnectionTask.Wait();
+			}
+			else if (!m_ListenForConnectionTask.Wait(timeout))
 				return false;
 
 			return m_ListenForConnectionTask.Result;
@@ -114,10 +141,18 @@ namespace COM3D2.LiveLink
 		}
 
 		private bool m_WriteFlush = false;
+		private int m_NextHeartbeat = int.MinValue;
+		private int m_HeartbeatInterval = 1000;
 		void WriteThread()
 		{
 			while (true)
 			{
+				if (Environment.TickCount > m_NextHeartbeat)
+				{
+					m_ServerPipe.Write(BitConverter.GetBytes(0), 0, 4);
+					m_NextHeartbeat = Environment.TickCount + m_HeartbeatInterval;
+				}
+
 				while (m_OutMessageQueue.TryDequeue(out MemoryStream message))
 				{
 					m_ServerPipe.Write(BitConverter.GetBytes((int)message.Length), 0, 4);
@@ -150,6 +185,7 @@ namespace COM3D2.LiveLink
 				if (result == -1)
 				{
 					m_IsEndOfPipe.Value = true;
+					Console.WriteLine($"{this} lost connection");
 					return;
 				}
 				else
@@ -167,6 +203,8 @@ namespace COM3D2.LiveLink
 
 		public void Flush()
 		{
+			if (IsDisposed) throw new System.InvalidOperationException($"The {this.GetType().Name} has been disposed");
+			if (!IsConnected) throw new System.InvalidOperationException($"The {this.GetType().Name} has no connection");
 			m_WriteFlush = true;
 			m_WriteThread.Join();
 			m_WriteFlush = false;

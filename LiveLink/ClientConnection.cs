@@ -14,8 +14,6 @@ namespace COM3D2.LiveLink
 	internal class ClientConnection : Connection, IDisposable
 	{
 		protected override PipeStream Pipe => m_ClientPipe;
-		public override bool CanRead => m_ClientPipe != null && m_ClientPipe.CanRead;
-		public override bool CanWrite => m_ClientPipe != null && m_ClientPipe.CanWrite;
 
 		NamedPipeClientStream m_ClientPipe;
 		Thread m_ReadThread;
@@ -87,6 +85,7 @@ namespace COM3D2.LiveLink
 		object m_ReadLockContinue = new object();
 		object m_TryReadLockWait = new object();
 		object m_TryReadLockContinue = new object();
+		bool m_StopReadThread = false;
 		void ReadThread()
 		{
 			//int initialBufferSize = 4096;
@@ -94,9 +93,13 @@ namespace COM3D2.LiveLink
 			byte[] lengthBuffer = new byte[4];
 			while (true)
 			{
+				if (m_StopReadThread) break;
+
 				if (4 > m_ClientPipe.Read(lengthBuffer, 0, 4)) continue;
 				
 				int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
+				if (messageLength == 0) continue; // Heartbeat
+
 				byte[] buffer = new byte[messageLength];
 				int readCount = 0;
 				while (readCount < messageLength)
@@ -140,7 +143,11 @@ namespace COM3D2.LiveLink
 		protected override void OnDispose(bool disposing)
 		{
 			// Stop threads
-			m_ReadThread?.Abort();
+			Console.WriteLine("Stopping Read Thread");
+			Console.Out.Flush();
+			m_StopReadThread = true;
+			m_ReadThread.Join();
+			Console.WriteLine("Read Thread Stopped");
 
 			if (disposing)
 			{

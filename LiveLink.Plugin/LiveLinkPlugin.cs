@@ -39,7 +39,7 @@ namespace COM3D2.LiveLink.Plugin
 		// The name of this plugin.
 		public const string PLUGIN_NAME = "LiveLink";
 		// The version of this plugin.
-		public const string PLUGIN_VERSION = "1.0";
+		public const string PLUGIN_VERSION = "1.0.1";
 	}
 }
 
@@ -69,41 +69,60 @@ namespace COM3D2.LiveLink.Plugin
 
 		private bool m_IsExpectConnected = false;
 
+		public bool IsConnected => m_Core != null && m_Core.IsConnected;
+
 		private void Awake()
 		{
-			// Useful for engaging coroutines or accessing non-static variables. Completely optional though.
 			Instance = this;
+			if (!Tests.PluginTests.RunTestsInCommandline())
+			{
+				Initialize();
+			}
+		}
+
+		private bool _isInitalized = false;
+		internal void Initialize()
+		{
+			if (_isInitalized) return;
 
 			Config.BindToConfigFile(ConfigFile);
 
 			// Installs the patches in the BlenderLiveLink class.
 			Harmony.CreateAndPatchAll(typeof(LiveLinkPlugin));
+			Harmony.CreateAndPatchAll(typeof(ImportCMExtensions));
 
 			this.gameObject.AddComponent<LiveLinkAnimator>();
+			this.gameObject.AddComponent<LiveLinkModelViewer>();
 
 			Logger.LogInfo("LiveLink Plugin Loaded");
-
-			Tests.PluginTests.RunTestsInCommandline();
 		}
 
-		private void StartClient()
+
+
+		internal bool StartClient(string address = null)
 		{
-			if (m_Core.StartClient(Config.ServerAddress))
+			address ??= Config.ServerAddress;
+
+			Logger.LogMessage($"Attempting to connect to LiveLink server at {address}");
+			bool didConnect = m_Core.StartClient(address);
+			if (didConnect)
 			{
-				GameMain.Instance.SysDlg.Show("Connected to LiveLink server.", SystemDialog.TYPE.OK);
 				m_IsExpectConnected = true;
+				GameMain.Instance.SysDlg.ShowEnqueue("Connected to LiveLink server.");
 			}
 			else
 			{
-				GameMain.Instance.SysDlg.Show("Could not connect to LiveLink server.", SystemDialog.TYPE.OK);
+				GameMain.Instance.SysDlg.ShowEnqueue("Could not connect to LiveLink server.");
 			}
+			return didConnect;
 		}
 
-		private void DisconnectClient()
+		internal void DisconnectClient()
 		{
-			Logger.LogInfo("Disconnecting");
+			if (!IsConnected) return;
+			Logger.LogMessage("Disconnecting LiveLink");
 			m_Core.Disconnect();
-			GameMain.Instance.SysDlg.Show("Disconnected from LiveLink server.", SystemDialog.TYPE.OK);
+			GameMain.Instance.SysDlg.ShowEnqueue("Disconnected from LiveLink server.");
 			m_IsExpectConnected = false;
 		}
 
@@ -145,11 +164,13 @@ namespace COM3D2.LiveLink.Plugin
 			}
 		}
 
-		private void ClientUpdate()
+		internal int HandledMessageCount { get; private set; } = 0;
+		internal void ClientUpdate()
 		{
 			while (m_Core.TryReadMessage(out MemoryStream message))
 			{
 				HandleMessage(message);
+				HandledMessageCount += 1;
 			}
 		}
 
@@ -162,11 +183,17 @@ namespace COM3D2.LiveLink.Plugin
 		internal void HandleMessage(MemoryStream message)
 		{
 			CM3D2Serializer serializer = new CM3D2Serializer();
+			long pos = message.Position;
 			string command = serializer.Deserialize<string>(message);
+			message.Position = pos;
 			Logger.LogDebug($"HandleMessage {command}");
 			if (command == "CM3D2_ANIM")
 			{
 				LiveLinkAnimator.SetAnimation(message.GetBuffer());
+			}
+			else if (command == "CM3D2_MESH")
+			{
+				LiveLinkModelViewer.SetModel(message);
 			}
 		}
 

@@ -80,7 +80,7 @@ namespace COM3D2.LiveLink.Tests
 			clientCore = new LiveLinkCore();
 			Assert.IsTrue(clientCore.StartClient(address), "Failed to connect client to server.");
 
-			serverCLI.StandardInput.WriteLine($"waitfor --connection --time 1");
+			serverCLI.StandardInput.WriteLine($"waitfor --connection");// --time 1");
 			Assert.IsTrue(clientCore.IsConnected);
 		}
 
@@ -143,11 +143,11 @@ namespace COM3D2.LiveLink.Tests
 			serverCLI.StandardInput.WriteLine($"send --string {testString}");
 			serverCLI.StandardInput.WriteLine($"flush");
 
-			System.Threading.Thread.Sleep(100);
+			Thread.Sleep(100);
 
 			string recieved = clientCore.ReadString();
 
-			clientCore.Dispose();
+			//clientCore.Dispose();
 			int exitCode = StopCLIProcess(serverCLI);
 			Console.WriteLine("Server Output - - - - - - - - -");
 			Console.Write(serverCLI.StandardOutput.ReadAllAvailable());
@@ -165,7 +165,7 @@ namespace COM3D2.LiveLink.Tests
 
 			string testString = "Hello World!";
 			serverCLI.StandardInput.WriteLine($"send --string {testString}");
-			serverCLI.StandardInput.WriteLine($"flush");
+			//serverCLI.StandardInput.WriteLine($"flush");
 
 			System.Threading.Thread.Sleep(100);
 

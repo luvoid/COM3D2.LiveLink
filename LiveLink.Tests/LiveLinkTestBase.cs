@@ -9,9 +9,10 @@ namespace COM3D2.LiveLink.Tests
 {
 	public abstract class LiveLinkTestBase
 	{
+		private static int addressCounter = 0;
 		public static string GetProcessUniqueAddress(string baseAddress = "com3d2.livelink")
 		{
-			return $"{baseAddress}.{Process.GetCurrentProcess().Id}";
+			return $"{baseAddress}.{Process.GetCurrentProcess().Id}.{addressCounter++}";
 		}
 
 		public static LiveLinkCore CreateServer()

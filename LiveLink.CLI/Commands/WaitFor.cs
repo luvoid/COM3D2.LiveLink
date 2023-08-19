@@ -18,18 +18,28 @@ namespace COM3D2.LiveLink.CLI.Commands
 		{
 			if (!Parse.NamedInt(args, out int timeout, "--time", "-t"))
 			{
-				timeout = 1000;
+				timeout = -1;
 			}
 
 			if (Parse.NamedFlag(args, "--connection", "-c"))
 			{
+				bool connected = false;
 				try
 				{
-					m_Core.WaitForConnection(timeout);
+					connected = m_Core.WaitForConnection(timeout);
 				}
 				catch (Exception e)
 				{
 					ErrorConsole.WriteLine(e.Message);
+				}
+
+				if (connected)
+				{
+					Console.WriteLine("A client has connected");
+				}
+				else
+				{
+					Console.WriteLine("Wait for connection has timed out");
 				}
 			}
 
