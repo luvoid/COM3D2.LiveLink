@@ -147,7 +147,6 @@ namespace COM3D2.LiveLink.Tests
 
 			string recieved = clientCore.ReadString();
 
-			//clientCore.Dispose();
 			int exitCode = StopCLIProcess(serverCLI);
 			Console.WriteLine("Server Output - - - - - - - - -");
 			Console.Write(serverCLI.StandardOutput.ReadAllAvailable());

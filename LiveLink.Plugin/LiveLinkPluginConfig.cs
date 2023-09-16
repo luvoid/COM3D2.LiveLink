@@ -18,6 +18,8 @@ namespace COM3D2.LiveLink.Plugin
 		private List<ConfigField> configFields;
 		public void BindToConfigFile(ConfigFile configFile)
 		{
+			if (configFile == null) throw new System.ArgumentNullException(nameof(configFile));
+
 			configFields = new List<ConfigField>();
 
 			MethodInfo[] configFileMethods = typeof(ConfigFile).GetMethods(BindingFlags.Instance | BindingFlags.Public);

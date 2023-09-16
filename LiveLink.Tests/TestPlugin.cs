@@ -123,7 +123,7 @@ namespace COM3D2.LiveLink.Tests
 		public void RecieveModel()
 		{
 			LiveLinkCore serverCore = CreateServer();
-			Process game = CreateCOM3D2Process($"-livelink:{serverCore.Address} -livelinktest:{nameof(PluginTests.TestRecieveMessage)}", quit: true);
+			Process game = CreateCOM3D2Process($"-livelink:{serverCore.Address} -livelinktest:{nameof(PluginTests.TestRecieveMessageWithMaid)}", quit: true);
 			WaitForConnectionOrFail(serverCore, game);
 
 			serverCore.SendBytes(File.ReadAllBytes("Resources/body001.model"));

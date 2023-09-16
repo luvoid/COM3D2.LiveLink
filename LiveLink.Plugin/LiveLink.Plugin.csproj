@@ -1,5 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
@@ -13,29 +12,34 @@
     <RootNamespace>COM3D2.LiveLink.Plugin</RootNamespace>
     <AssemblyName>COM3D2.LiveLink.Plugin</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net35</TargetFramework>
     <COM3D2InstallPath>C:\DJN\KISS\COM3D2</COM3D2InstallPath>
     <OutputPath>bin\$(Configuration)\$(Platform)</OutputPath>
     <StartProgram>$(COM3D2InstallPath)\COM3D2x64.exe</StartProgram>
+    <Configurations>Debug;Release;Debug_UnityEditor</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <OutputPath>bin\Debug\AnyCPU\</OutputPath>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug_UnityEditor'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug_UnityEditor' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE;UNITY_EDITOR</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <RestoreSources>$(RestoreSources);https://nuget.bepinex.dev/v3/index.json</RestoreSources>
@@ -44,33 +48,17 @@
     <PackageReference Include="BepInEx.Analyzers" Version="1.0.8" targetFramework="net35" developmentDependency="true">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="BepInEx.BaseLib" Version="5.4.19" targetFramework="net35" />
+    <PackageReference Include="BepInEx.BaseLib" Version="5.4.21" targetFramework="net35" />
     <PackageReference Include="BepInEx.Core" Version="5.4.19" targetFramework="net35" />
+    <PackageReference Include="COM3D2.GameLibs" Version="2.24.0-r.0" />
     <PackageReference Include="HarmonyX" Version="2.7.0" targetFramework="net35" />
+    <PackageReference Include="LuVoid.CM3D2.UGUI" Version="0.1.4-alpha.1" />
     <PackageReference Include="Mono.Cecil" Version="0.10.4" targetFramework="net35" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="21.12.13.1" targetFramework="net35" />
     <PackageReference Include="MonoMod.Utils" Version="21.12.13.1" targetFramework="net35" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="COM3D2.API, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="System">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Core">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Data">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml">
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(COM3D2InstallPath)\COM3D2x64_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
@@ -96,22 +84,6 @@
     <ReferencePath>$(ReferencePath);$(COM3D2InstallPath)\Sybaris\UnityInjector</ReferencePath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CodeMatcherExtensions.cs" />
-    <Compile Include="ImportCMExtensions.cs" />
-    <Compile Include="LiveLinkModelViewer.cs" />
-    <Compile Include="SystemDialogExtensions.cs" />
-    <Compile Include="Tests\PluginTests.cs" />
-    <Compile Include="LiveLinkAnimator.cs" />
-    <Compile Include="LiveLinkPluginConfig.cs" />
-    <Compile Include="InternalSingleton.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="LiveLinkPlugin.cs" />
-    <Compile Include="Tests\PluginTestHelper.cs" />
-    <Compile Include="Tests\PluginTestLogListener.cs" />
-    <Compile Include="Tests\SafeExitHelper.cs" />
-    <Compile Include="Tests\TestRecieveMessageHelper.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\CM3D2.Serialization\CM3D2.Serialization\CM3D2.Serialization.csproj">
       <Project>{59786FC6-0C86-495E-AB89-7CFABCC966E6}</Project>
       <Name>CM3D2.Serialization</Name>
@@ -125,14 +97,28 @@
       <Name>LiveLink</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
+    <PostBuildEvent Condition=" '$(Configuration)' != 'Debug_UnityEditor' ">
       for /f "usebackq delims=|" %25%25f in (`dir /b *.dll`) do "$(ProjectDir)\pdb2mdb.exe" "%25%25f" 1&gt;nul
       rd "$(COM3D2InstallPath)\BepinEx\plugins\vsout_$(ProjectName)"
       mklink /J "$(COM3D2InstallPath)\BepinEx\plugins\vsout_$(ProjectName)" .
-</PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_UnityEditor|AnyCPU'">
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
+  </PropertyGroup>
+  <Target Name="CreateMonoDebugSymbols" AfterTargets="build" Condition="'$(Configuration)' == 'Debug_UnityEditor'">
+    <Exec Command="for /f &quot;usebackq delims=|&quot; %25%25f in (`dir /b *.dll`) do &quot;$(ProjectDir)lib\pdb2mdb.exe&quot; %25%25f" WorkingDirectory="$(OutputPath)" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

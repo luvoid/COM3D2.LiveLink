@@ -14,6 +14,9 @@ using System.Security.Permissions;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+using UniverseLib;
+using UniverseLib.UI;
+using CM3D2.UGUI;
 
 
 // If there are errors in the above using statements, restore the NuGet packages:
@@ -35,11 +38,15 @@ namespace COM3D2.LiveLink.Plugin
 	public static class PluginInfo
 	{
 		// The name of this assembly.
-		public const string PLUGIN_GUID = "COM3D2.LiveLink.Plugin";
+		internal const string PLUGIN_GUID = "COM3D2.LiveLink.Plugin";
 		// The name of this plugin.
-		public const string PLUGIN_NAME = "LiveLink";
+		internal const string PLUGIN_NAME = "LiveLink";
 		// The version of this plugin.
-		public const string PLUGIN_VERSION = "1.0.1";
+		internal const string PLUGIN_VERSION = "1.1.0";
+
+		public static readonly string Guid = PLUGIN_GUID;
+		public static readonly string Name = PLUGIN_NAME;
+		public static readonly string Varsion = PLUGIN_VERSION;
 	}
 }
 
@@ -71,6 +78,8 @@ namespace COM3D2.LiveLink.Plugin
 
 		public bool IsConnected => m_Core != null && m_Core.IsConnected;
 
+		internal UIBase PluginUIBase;
+
 		private void Awake()
 		{
 			Instance = this;
@@ -91,13 +100,20 @@ namespace COM3D2.LiveLink.Plugin
 			Harmony.CreateAndPatchAll(typeof(LiveLinkPlugin));
 			Harmony.CreateAndPatchAll(typeof(ImportCMExtensions));
 
-			this.gameObject.AddComponent<LiveLinkAnimator>();
-			this.gameObject.AddComponent<LiveLinkModelViewer>();
+			new GameObject("LiveLinkDirector", typeof(LiveLinkDirector)).transform.SetParent(this.transform, false);
+
+			CM3D2Universe.Init(OnUniverseInit);
 
 			Logger.LogInfo("LiveLink Plugin Loaded");
 		}
 
+		private void OnUniverseInit()
+		{
+			PluginUIBase = CM3D2UniversalUI.RegisterUI(PluginInfo.PLUGIN_GUID);
+			PluginUIBase.Enabled = false;
 
+			LiveLinkDirector.Instance.InitializePanel(PluginUIBase);
+		}
 
 		internal bool StartClient(string address = null)
 		{
@@ -133,6 +149,11 @@ namespace COM3D2.LiveLink.Plugin
 			if (m_Core.IsConnected)
 			{
 				ClientUpdate();
+			}
+
+			if (m_StartClientShortcut.IsDown())
+			{
+				PluginUIBase.Enabled = true;
 			}
 
 			if (GameMain.Instance.SysDlg.IsDecided)
@@ -189,11 +210,11 @@ namespace COM3D2.LiveLink.Plugin
 			Logger.LogDebug($"HandleMessage {command}");
 			if (command == "CM3D2_ANIM")
 			{
-				LiveLinkAnimator.SetAnimation(message.GetBuffer());
+				LiveLinkDirector.Instance.SetAnimation(message.GetBuffer());
 			}
 			else if (command == "CM3D2_MESH")
 			{
-				LiveLinkModelViewer.SetModel(message);
+				LiveLinkDirector.Instance.LoadModel(message);
 			}
 		}
 

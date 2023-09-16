@@ -8,7 +8,7 @@ namespace COM3D2.LiveLink.Plugin
 	internal abstract class InternalSingleton<T> : MonoSingleton<T>
 		where T : InternalSingleton<T>
 	{
-		protected static T Instance;
+		internal protected static T Instance;
 		public sealed override void OnInitialize()
 		{
 			Instance = this as T;

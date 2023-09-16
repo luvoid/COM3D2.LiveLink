@@ -140,5 +140,10 @@ namespace COM3D2.LiveLink.Plugin.Tests
 		{
 			Plugin.gameObject.AddComponent<TestRecieveMessageHelper>();
 		}
+
+		public static void TestRecieveMessageWithMaid()
+		{
+			Plugin.gameObject.AddComponent<TestRecieveMessageWithMaidHelper>();
+		}
 	}
 }

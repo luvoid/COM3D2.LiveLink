@@ -24,7 +24,7 @@ namespace COM3D2.LiveLink.Plugin.Tests
 			{
 				if (Plugin.StartClient(TestAddress))
 				{
-					Logger.LogMessage($"{nameof(TestRecieveMessageHelper)}: Client started. Waiting for message...");
+					Logger.LogMessage($"{this.GetType().Name}: Client started. Waiting for message...");
 				}
 			}
 			else if (Plugin.IsConnected)
