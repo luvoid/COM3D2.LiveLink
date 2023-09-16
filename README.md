@@ -1,6 +1,6 @@
 # COM3D2.LiveLink
 This plugin for COM3D2 allows communication with other programs (such as Blender)
-to update, control, and preview changes to animations in real-time.
+to update, control, and preview changes to animations and models in real-time.
 
 [Short Video Demo](https://twitter.com/i/status/1680766109438418945)
 
