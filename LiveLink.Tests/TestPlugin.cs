@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using COM3D2.LiveLink.Plugin.Tests;
 using Microsoft.Win32.SafeHandles;
 using Microsoft.Win32;
+using HarmonyLib;
+using COM3D2.LiveLink.Plugin;
 
 namespace COM3D2.LiveLink.Tests
 {
@@ -135,5 +137,12 @@ namespace COM3D2.LiveLink.Tests
 			//Assert.That.ExitZero(game, -1073741510, PLUGIN_OUT_PATH, PLUGIN_ERR_PATH);
 		}
 
+		[TestMethod]
+		public void TestImportCMPatch()
+		{
+			Harmony harmony = new(nameof(TestImportCMPatch));
+			//Console.WriteLine(ImportCMExtensions.isV3);
+			ImportCMExtensions.Patch(harmony);
+		}
 	}
 }

@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <StartAction>Program</StartAction>
     <ProjectGuid>{7AB5BFFA-621F-48E4-AAED-943B97A1B7EC}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <PlatformTarget>x64</PlatformTarget>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>COM3D2.LiveLink.Plugin</RootNamespace>
     <AssemblyName>COM3D2.LiveLink.Plugin</AssemblyName>
@@ -41,26 +40,26 @@
     <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup>
-    <RestoreSources>$(RestoreSources);https://nuget.bepinex.dev/v3/index.json</RestoreSources>
-  </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.1" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Analyzers" Version="1.0.8" targetFramework="net35" developmentDependency="true">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="BepInEx.BaseLib" Version="5.4.21" targetFramework="net35" />
     <PackageReference Include="BepInEx.Core" Version="5.4.19" targetFramework="net35" />
-    <PackageReference Include="COM3D2.GameLibs" Version="2.24.0-r.0" />
-    <PackageReference Include="HarmonyX" Version="2.7.0" targetFramework="net35" />
-    <PackageReference Include="LuVoid.CM3D2.UGUI" Version="0.1.4-alpha.1" />
-    <PackageReference Include="Mono.Cecil" Version="0.10.4" targetFramework="net35" />
-    <PackageReference Include="MonoMod.RuntimeDetour" Version="21.12.13.1" targetFramework="net35" />
-    <PackageReference Include="MonoMod.Utils" Version="21.12.13.1" targetFramework="net35" />
+    <PackageReference Include="HarmonyX" Version="2.9.0" targetFramework="net35" />
+    <PackageReference Include="LuVoid.CM3D2.UGUI" Version="0.1.4-alpha.1" targetFramework="net35">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>compile;runtime</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="COM3D2.API, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(COM3D2InstallPath)\COM3D2x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+    <Reference Include="COM3D2.API">
+      <HintPath>$(COM3D2InstallPath)\BepinEx\plugins\COM3D2.API.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp" Publicize="true">
+      <HintPath>$(COM3D2InstallPath)\COM3D2x64_Data\Managed\Assembly-CSharp.3.31.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
@@ -73,6 +72,11 @@
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>$(COM3D2InstallPath)\COM3D2x64_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="COM3D2.ShapekeyMaster.Plugin" Publicize="true">
+      <HintPath>$(COM3D2InstallPath)\BepinEx\plugins\COM3D2.ShapekeyMaster.Plugin.dll</HintPath>
+      <ExcludeAssets>runtime</ExcludeAssets>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -96,6 +100,11 @@
       <Project>{4ae5c9fa-7423-4494-a656-ea80884f4ebc}</Project>
       <Name>LiveLink</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>COM3D2.LiveLink.Tests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
   <PropertyGroup>
     <PostBuildEvent Condition=" '$(Configuration)' != 'Debug_UnityEditor' ">

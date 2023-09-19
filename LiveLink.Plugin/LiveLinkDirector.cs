@@ -1,6 +1,4 @@
 ﻿using CM3D2.UGUI.Panels;
-using COM3D2.LiveLink.Plugin;
-using HarmonyLib;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,142 +8,80 @@ using UniverseLib.UI;
 
 namespace COM3D2.LiveLink.Plugin
 {
-	internal enum TargetSlotID
-	{
-		body,
-		head,
-		eye,
-		hairF,
-		hairR,
-		hairS,
-		hairT,
-		wear,
-		skirt,
-		onepiece,
-		mizugi,
-		panz,
-		bra,
-		stkg,
-		shoes,
-		headset,
-		glove,
-		accHead,
-		hairAho,
-		accHana,
-		accHa,
-		accKami_1_,
-		accMiMiR,
-		accKamiSubR,
-		accNipR,
-		HandItemR,
-		accKubi,
-		accKubiwa,
-		accHeso,
-		accUde,
-		accAshi,
-		accSenaka,
-		accShippo,
-		accAnl,
-		accVag,
-		kubiwa,
-		megane,
-		accXXX,
-		chinko,
-		chikubi,
-		accHat,
-		kousoku_upper,
-		kousoku_lower,
-		seieki_naka,
-		seieki_hara,
-		seieki_face,
-		seieki_mune,
-		seieki_hip,
-		seieki_ude,
-		seieki_ashi,
-		accNipL,
-		accMiMiL,
-		accKamiSubL,
-		accKami_2_,
-		accKami_3_,
-		HandItemL,
-		underhair,
-		moza,
-		end
-	}
 
 	internal class LiveLinkDirector : InternalSingleton<LiveLinkDirector>
 	{
 		[SerializeField] private DirectorPanel panel;
 
 		[SerializeField] internal Maid TargetMaid = null;
-		[SerializeField] internal TargetSlotID TargetSlot;
+		[SerializeField] internal SafeSlotID TargetSlot;
 		[SerializeField] internal int TargetLayer = 0;
 		[SerializeField] internal TBody ActiveBody = null;
 		[SerializeField] internal TBodySkin ActiveBodySkin = null;
 
-		internal MPN TargetMPN => slotMPNMap[TargetSlot];
+		internal SafeMPN TargetMPN => slotMPNMap[TargetSlot];
 
-		private static readonly Dictionary<TargetSlotID, MPN> slotMPNMap = new Dictionary<TargetSlotID, MPN>()
+		private static readonly Dictionary<SafeSlotID, SafeMPN> slotMPNMap = new()
 		{
-			{ TargetSlotID.body         , MPN.body         },
-			{ TargetSlotID.head         , MPN.head         },
-			{ TargetSlotID.eye          , MPN.eye          },
-			{ TargetSlotID.hairF        , MPN.hairf        },
-			{ TargetSlotID.hairR        , MPN.hairr        },
-			{ TargetSlotID.hairS        , MPN.hairs        },
-			{ TargetSlotID.hairT        , MPN.hairt        },
-			{ TargetSlotID.wear         , MPN.wear         },
-			{ TargetSlotID.skirt        , MPN.skirt        },
-			{ TargetSlotID.onepiece     , MPN.onepiece     },
-			{ TargetSlotID.mizugi       , MPN.mizugi       },
-			{ TargetSlotID.panz         , MPN.panz         },
-			{ TargetSlotID.bra          , MPN.bra          },
-			{ TargetSlotID.stkg         , MPN.stkg         },
-			{ TargetSlotID.shoes        , MPN.shoes        },
-			{ TargetSlotID.headset      , MPN.headset      },
-			{ TargetSlotID.glove        , MPN.glove        },
-			{ TargetSlotID.accHead      , MPN.acchead      },
-			{ TargetSlotID.hairAho      , MPN.hairaho      },
-			{ TargetSlotID.accHana      , MPN.acchana      },
-			{ TargetSlotID.accHa        , MPN.accha        },
-			{ TargetSlotID.accKami_1_   , MPN.acckami      },
-			{ TargetSlotID.accMiMiR     , MPN.accmimi      },
-			{ TargetSlotID.accKamiSubR  , MPN.acckamisub   },
-			{ TargetSlotID.accNipR      , MPN.accnip       },
-			{ TargetSlotID.HandItemR    , MPN.handitem     },
-			{ TargetSlotID.accKubi      , MPN.acckubi      },
-			{ TargetSlotID.accKubiwa    , MPN.acckubiwa    },
-			{ TargetSlotID.accHeso      , MPN.accheso      },
-			{ TargetSlotID.accUde       , MPN.accude       },
-			{ TargetSlotID.accAshi      , MPN.accashi      },
-			{ TargetSlotID.accSenaka    , MPN.accsenaka    },
-			{ TargetSlotID.accShippo    , MPN.accshippo    },
-			{ TargetSlotID.accAnl       , MPN.accanl       },
-			{ TargetSlotID.accVag       , MPN.accvag       },
-			{ TargetSlotID.kubiwa       , MPN.null_mpn     },
-			{ TargetSlotID.megane       , MPN.megane       },
-			{ TargetSlotID.accXXX       , MPN.accxxx       },
-			{ TargetSlotID.chinko       , MPN.null_mpn     },
-			{ TargetSlotID.chikubi      , MPN.chikubi      },
-			{ TargetSlotID.accHat       , MPN.acchat       },
-			{ TargetSlotID.kousoku_upper, MPN.kousoku_upper},
-			{ TargetSlotID.kousoku_lower, MPN.kousoku_lower},
-			{ TargetSlotID.seieki_naka  , MPN.seieki_naka  },
-			{ TargetSlotID.seieki_hara  , MPN.seieki_hara  },
-			{ TargetSlotID.seieki_face  , MPN.seieki_face  },
-			{ TargetSlotID.seieki_mune  , MPN.seieki_mune  },
-			{ TargetSlotID.seieki_hip   , MPN.seieki_hip   },
-			{ TargetSlotID.seieki_ude   , MPN.seieki_ude   },
-			{ TargetSlotID.seieki_ashi  , MPN.seieki_ashi  },
-			{ TargetSlotID.accNipL      , MPN.accnip       },
-			{ TargetSlotID.accMiMiL     , MPN.accmimi      },
-			{ TargetSlotID.accKamiSubL  , MPN.acckamisub   },
-			{ TargetSlotID.accKami_2_   , MPN.acckami      },
-			{ TargetSlotID.accKami_3_   , MPN.acckami      },
-			{ TargetSlotID.HandItemL    , MPN.handitem     },
-			{ TargetSlotID.underhair    , MPN.underhair    },
-			{ TargetSlotID.moza         , MPN.moza         },
-			{ TargetSlotID.end          , MPN.null_mpn     },
+			{ SafeSlotID.body         , SafeMPN.body         },
+			{ SafeSlotID.head         , SafeMPN.head         },
+			{ SafeSlotID.eye          , SafeMPN.eye          },
+			{ SafeSlotID.hairF        , SafeMPN.hairf        },
+			{ SafeSlotID.hairR        , SafeMPN.hairr        },
+			{ SafeSlotID.hairS        , SafeMPN.hairs        },
+			{ SafeSlotID.hairT        , SafeMPN.hairt        },
+			{ SafeSlotID.wear         , SafeMPN.wear         },
+			{ SafeSlotID.skirt        , SafeMPN.skirt        },
+			{ SafeSlotID.onepiece     , SafeMPN.onepiece     },
+			{ SafeSlotID.mizugi       , SafeMPN.mizugi       },
+			{ SafeSlotID.panz         , SafeMPN.panz         },
+			{ SafeSlotID.bra          , SafeMPN.bra          },
+			{ SafeSlotID.stkg         , SafeMPN.stkg         },
+			{ SafeSlotID.shoes        , SafeMPN.shoes        },
+			{ SafeSlotID.headset      , SafeMPN.headset      },
+			{ SafeSlotID.glove        , SafeMPN.glove        },
+			{ SafeSlotID.accHead      , SafeMPN.acchead      },
+			{ SafeSlotID.hairAho      , SafeMPN.hairaho      },
+			{ SafeSlotID.accHana      , SafeMPN.acchana      },
+			{ SafeSlotID.accHa        , SafeMPN.accha        },
+			{ SafeSlotID.accKami_1_   , SafeMPN.acckami      },
+			{ SafeSlotID.accMiMiR     , SafeMPN.accmimi      },
+			{ SafeSlotID.accKamiSubR  , SafeMPN.acckamisub   },
+			{ SafeSlotID.accNipR      , SafeMPN.accnip       },
+			{ SafeSlotID.HandItemR    , SafeMPN.handitem     },
+			{ SafeSlotID.accKubi      , SafeMPN.acckubi      },
+			{ SafeSlotID.accKubiwa    , SafeMPN.acckubiwa    },
+			{ SafeSlotID.accHeso      , SafeMPN.accheso      },
+			{ SafeSlotID.accUde       , SafeMPN.accude       },
+			{ SafeSlotID.accAshi      , SafeMPN.accashi      },
+			{ SafeSlotID.accSenaka    , SafeMPN.accsenaka    },
+			{ SafeSlotID.accShippo    , SafeMPN.accshippo    },
+			{ SafeSlotID.accAnl       , SafeMPN.accanl       },
+			{ SafeSlotID.accVag       , SafeMPN.accvag       },
+			{ SafeSlotID.kubiwa       , SafeMPN.null_mpn     },
+			{ SafeSlotID.megane       , SafeMPN.megane       },
+			{ SafeSlotID.accXXX       , SafeMPN.accxxx       },
+			{ SafeSlotID.chinko       , SafeMPN.null_mpn     },
+			{ SafeSlotID.chikubi      , SafeMPN.chikubi      },
+			{ SafeSlotID.accHat       , SafeMPN.acchat       },
+			{ SafeSlotID.kousoku_upper, SafeMPN.kousoku_upper},
+			{ SafeSlotID.kousoku_lower, SafeMPN.kousoku_lower},
+			{ SafeSlotID.seieki_naka  , SafeMPN.seieki_naka  },
+			{ SafeSlotID.seieki_hara  , SafeMPN.seieki_hara  },
+			{ SafeSlotID.seieki_face  , SafeMPN.seieki_face  },
+			{ SafeSlotID.seieki_mune  , SafeMPN.seieki_mune  },
+			{ SafeSlotID.seieki_hip   , SafeMPN.seieki_hip   },
+			{ SafeSlotID.seieki_ude   , SafeMPN.seieki_ude   },
+			{ SafeSlotID.seieki_ashi  , SafeMPN.seieki_ashi  },
+			{ SafeSlotID.accNipL      , SafeMPN.accnip       },
+			{ SafeSlotID.accMiMiL     , SafeMPN.accmimi      },
+			{ SafeSlotID.accKamiSubL  , SafeMPN.acckamisub   },
+			{ SafeSlotID.accKami_2_   , SafeMPN.acckami      },
+			{ SafeSlotID.accKami_3_   , SafeMPN.acckami      },
+			{ SafeSlotID.HandItemL    , SafeMPN.handitem     },
+			{ SafeSlotID.underhair    , SafeMPN.underhair    },
+			{ SafeSlotID.moza         , SafeMPN.moza         },
+			{ SafeSlotID.end          , SafeMPN.null_mpn     },
 		};
 
 		internal void InitializePanel(UIBase owner)
@@ -181,17 +117,17 @@ namespace COM3D2.LiveLink.Plugin
 		}
 
 		private static int itemCount = 0;
-		private static void TBody_AddItem(TBody body, MPN mpn, string slotname, Stream filestream)//, string AttachSlot, string AttachName, bool f_bTemp, int version)
+		private static void TBody_AddItem(TBody body, SafeMPN safempn, string slotname, Stream filestream)//, string AttachSlot, string AttachName, bool f_bTemp, int version)
 		{
-			int num = (int)TBody.hashSlotName[slotname];
-			string bonename = body.m_strSlotName[num * TBody.strSlotNameItemCnt + 1];
+			int slotNum = (int)TBody.hashSlotName[slotname];
+			string bonename = body.m_strSlotName[slotNum * TBody.strSlotNameItemCnt + 1];
 			//if (AttachSlot == "ボーンにアタッチ" && !string.IsNullOrEmpty(AttachName))
 			//{
 			//	bonename = AttachName;
 			//}
 
-			TBodySkin bodySkin = body.goSlot[num];
-			TBodySkin_Load(bodySkin, mpn, body.m_trBones2, body.m_trBones, body.m_dicTrans, bonename, filestream, slotname, null, 10, false, 100);
+			TBodySkin bodySkin = body.SafeGoSlot()[slotNum];
+			TBodySkin_Load(bodySkin, safempn, body.m_trBones2, body.m_trBones, body.m_dicTrans, bonename, filestream, slotname, null, 10, false, 100);
 			//tBodySkin.SyojiType = 0;
 			bodySkin.m_strModelFileName = $"LiveLinkItem{itemCount++}";
 			bodySkin.RID = bodySkin.m_strModelFileName.GetHashCode();
@@ -229,13 +165,13 @@ namespace COM3D2.LiveLink.Plugin
 			if (slotname == "body" && !body.boMAN)
 			{
 				body.quaUppertwist_L = CMT.SearchObjName(bodySkin.obj_tr, "Uppertwist_L", boSMPass: false).localRotation;
-				body.quaUpperArmL = CMT.SearchObjName(bodySkin.obj_tr, "Bip01 L UpperArm", boSMPass: false).localRotation;
+				body.quaUpperArmL    = CMT.SearchObjName(bodySkin.obj_tr, "Bip01 L UpperArm", boSMPass: false).localRotation;
 				body.quaUppertwist_R = CMT.SearchObjName(bodySkin.obj_tr, "Uppertwist_R", boSMPass: false).localRotation;
-				body.quaUpperArmR = CMT.SearchObjName(bodySkin.obj_tr, "Bip01 R UpperArm", boSMPass: false).localRotation;
+				body.quaUpperArmR    = CMT.SearchObjName(bodySkin.obj_tr, "Bip01 R UpperArm", boSMPass: false).localRotation;
 			}
 
 			body.bonemorph.Init();
-			body.bonemorph.InitBoneMorphEdit(bodySkin.obj_tr, mpn, (TBody.SlotID)num, bodySkin);
+			body.bonemorph.InitBoneMorphEdit(bodySkin.obj_tr, safempn.ToMPN(), (TBody.SlotID)slotNum, bodySkin);
 			body.bonemorph.AddRoot(body.m_trBones);
 			body.bonemorph.Blend();
 			//if (body.boMAN)
@@ -244,16 +180,16 @@ namespace COM3D2.LiveLink.Plugin
 			//}
 		}
 
-		private static void TBodySkin_Load(TBodySkin bodySkin, MPN mpn, Transform srcbody, Transform body1, Dictionary<string, Transform> trans, string bonename, Stream stream, string slotname, string AttachSlot, int layer, bool f_bTemp, int version)
+		private static void TBodySkin_Load(TBodySkin bodySkin, SafeMPN safempn, Transform srcbody, Transform body1, Dictionary<string, Transform> trans, string bonename, Stream stream, string slotname, string AttachSlot, int layer, bool f_bTemp, int version)
 		{
-			bodySkin.DeleteObj();
+			bodySkin.SafeDeleteObj();
 			bodySkin.m_partsVersion = version;
-			if (mpn == MPN.accashi || mpn == MPN.shoes)
+			if (safempn == SafeMPN.accashi || safempn == SafeMPN.shoes)
 			{
 				bodySkin.m_bHitFloorY = false;
 			}
 
-			bodySkin.m_ParentMPN = mpn;
+			bodySkin.m_ParentMPN = safempn.ToMPN();
 			if (bodySkin.m_ParentMPN != 0)
 			{
 				bodySkin.m_mp = bodySkin.body.maid.GetProp(bodySkin.m_ParentMPN);
@@ -262,26 +198,29 @@ namespace COM3D2.LiveLink.Plugin
 			bodySkin.m_bTemp = f_bTemp;
 			bodySkin.boVisible = true;
 
-			Vector3 position = srcbody.position;
-			Quaternion rotation = srcbody.rotation;
-			Vector3 localScale = srcbody.localScale;
-			Vector3 position2 = body1.position;
-			Quaternion rotation2 = body1.rotation;
-			Vector3 localScale2 = body1.localScale;
+			Vector3    srcbodyPosition   = srcbody.position;
+			Quaternion srcebodyRotation  = srcbody.rotation;
+			Vector3    srcbodyLocalScale = srcbody.localScale;
+			Vector3    body1Position     = body1.position;
+			Quaternion body1Rotation     = body1.rotation;
+			Vector3    body1LocalScale   = body1.localScale;
 
 			srcbody.position = Vector3.zero;
 			srcbody.rotation = Quaternion.identity;
 			srcbody.localScale = new Vector3(1f / srcbody.lossyScale.x, 1f / srcbody.lossyScale.y, 1f / srcbody.lossyScale.z);
+
 			body1.position = Vector3.zero;
 			body1.rotation = Quaternion.identity;
 			body1.localScale = new Vector3(1f / body1.lossyScale.x, 1f / body1.lossyScale.y, 1f / body1.lossyScale.z);
 
 
 			bodySkin.morph = new TMorph(bodySkin);
-			GameObject gameObject = ImportCMExtensions.LoadSkinMesh_R(stream, bodySkin.morph, slotname, bodySkin, layer);
+			GameObject meshObject = ImportCMExtensions.LoadSkinMesh_R(stream, bodySkin.morph, slotname, bodySkin, layer);
+			ShapekeyMasterUtils.TryUpdateMorphDicImmediate(bodySkin.morph);
+
 			if (bodySkin.m_bMan)
 			{
-				Transform[] componentsInChildren = gameObject.GetComponentsInChildren<Transform>(includeInactive: true);
+				Transform[] componentsInChildren = meshObject.GetComponentsInChildren<Transform>(includeInactive: true);
 				foreach (Transform transform in componentsInChildren)
 				{
 					Renderer component = transform.GetComponent<Renderer>();
@@ -308,7 +247,7 @@ namespace COM3D2.LiveLink.Plugin
 
 			if (bodySkin.m_bMan && Product.isEnglish && !Product.isPublic)
 			{
-				Transform[] componentsInChildren2 = gameObject.GetComponentsInChildren<Transform>(includeInactive: true);
+				Transform[] componentsInChildren2 = meshObject.GetComponentsInChildren<Transform>(includeInactive: true);
 				foreach (Transform transform2 in componentsInChildren2)
 				{
 					Renderer component2 = transform2.GetComponent<Renderer>();
@@ -328,25 +267,25 @@ namespace COM3D2.LiveLink.Plugin
 				}
 			}
 
-			bodySkin.morph.InitGameObject(gameObject);
+			bodySkin.morph.InitGameObject(meshObject);
 			if (Product.isEnglish && !Product.isPublic)
 			{
-				switch (mpn)
+				switch (safempn)
 				{
-					case MPN.body:
+					case SafeMPN.body:
 						bodySkin.kupaCtrl = new KupaCtrl(bodySkin.body, bodySkin.morph);
 						break;
-					case MPN.moza:
+					case SafeMPN.moza:
 						bodySkin.body.GetSlot(0).kupaCtrl.AddMozaMorph(bodySkin.morph);
 						break;
 				}
 			}
 
-			gameObject.transform.parent = CMT.SearchObjName(srcbody, bonename);
-			Vector3 localPosition = gameObject.transform.localPosition;
-			Vector3 localScale3 = gameObject.transform.localScale;
-			Quaternion localRotation = gameObject.transform.localRotation;
-			gameObject.transform.parent = CMT.SearchObjName(body1, bonename);
+			meshObject.transform.parent = CMT.SearchObjName(srcbody, bonename);
+			Vector3    meshLocalPosition = meshObject.transform.localPosition;
+			Vector3    meshLocalScale    = meshObject.transform.localScale;
+			Quaternion meshLocalRotation = meshObject.transform.localRotation;
+			meshObject.transform.parent = CMT.SearchObjName(body1, bonename);
 			//if (!string.IsNullOrEmpty(AttachSlot))
 			//{
 			//	bodySkin.AttachVisible = true;
@@ -354,38 +293,38 @@ namespace COM3D2.LiveLink.Plugin
 
 			if (AttachSlot == "ボーンにアタッチ" && (bonename == "_IK_handR" || bonename == "_IK_handL"))
 			{
-				localPosition = Vector3.zero;
-				localRotation = Quaternion.identity;
-				localScale3 = Vector3.one;
+				meshLocalPosition = Vector3.zero;
+				meshLocalRotation = Quaternion.identity;
+				meshLocalScale    = Vector3.one;
 			}
 
-			gameObject.transform.localPosition = localPosition;
-			gameObject.transform.localRotation = localRotation;
-			gameObject.transform.localScale = localScale3;
-			bodySkin.obj = gameObject;
+			meshObject.transform.localPosition = meshLocalPosition;
+			meshObject.transform.localRotation = meshLocalRotation;
+			meshObject.transform.localScale    = meshLocalScale;
+			bodySkin.obj = meshObject;
 			bodySkin.obj_tr = bodySkin.obj.transform;
 			bodySkin.listTrs = new List<Transform>(200);
 			bodySkin.listTrsScr = new List<Transform>(4);
-			CMT.BindTrans(bodySkin.listTrs, bodySkin.listTrsScr, trans, gameObject.transform);
+			CMT.BindTrans(bodySkin.listTrs, bodySkin.listTrsScr, trans, meshObject.transform);
 
-			srcbody.position = position;
-			srcbody.rotation = rotation;
-			srcbody.localScale = localScale;
-			body1.position = position2;
-			body1.rotation = rotation2;
-			body1.localScale = localScale2;
+			srcbody.position   = srcbodyPosition;
+			srcbody.rotation   = srcebodyRotation;
+			srcbody.localScale = srcbodyLocalScale;
+			body1.position     = body1Position;
+			body1.rotation     = body1Rotation;
+			body1.localScale   = body1LocalScale;
 
 			if (bodySkin.body.m_bNewPhyscs)
 			{
-				if (!bodySkin.bonehair2.InitGameObject(gameObject, mpn))
+				if (!bodySkin.bonehair2.InitGameObject(meshObject, safempn.ToMPN()))
 				{
-					bool bNoSkirt = bodySkin.bonehair3.InitGameObject(gameObject, mpn);
-					bodySkin.bonehair.SearchGameObj(gameObject, bNoSkirt);
+					bool bNoSkirt = bodySkin.bonehair3.InitGameObject(meshObject, safempn.ToMPN());
+					bodySkin.bonehair.SearchGameObj(meshObject, bNoSkirt);
 				}
 			}
 			else
 			{
-				bodySkin.bonehair.SearchGameObj(gameObject);
+				bodySkin.bonehair.SearchGameObj(meshObject);
 			}
 
 			bodySkin.ItemScaleReset();
@@ -400,41 +339,30 @@ namespace COM3D2.LiveLink.Plugin
 				bodySkin.bonehair.bodyhit.ScaleMune(item.Key, item.Value);
 			}
 
-			IEnumerator enumerator2 = bodySkin.morph.hash.Keys.GetEnumerator();
-			try
+			foreach (string key in bodySkin.morph.hash.Keys)
 			{
-				while (enumerator2.MoveNext())
+				int f_nIdx = (int)bodySkin.morph.hash[key];
+				if (bodySkin.body.m_MorphBlendValues.TryGetValue(key, out var value))
 				{
-					string key = (string)enumerator2.Current;
-					int f_nIdx = (int)bodySkin.morph.hash[key];
-					if (bodySkin.body.m_MorphBlendValues.TryGetValue(key, out var value))
-					{
-						bodySkin.morph.SetBlendValues(f_nIdx, value);
-					}
-				}
-			}
-			finally
-			{
-				IDisposable disposable;
-				if ((disposable = enumerator2 as IDisposable) != null)
-				{
-					disposable.Dispose();
+					bodySkin.morph.SetBlendValues(f_nIdx, value);
 				}
 			}
 
 			bodySkin.morph.FixBlendValues();
+
 			bodySkin.m_vDefPosLocal = (bodySkin.m_vPosLocal = bodySkin.obj_tr.localPosition);
 			bodySkin.m_qDefRotLocal = (bodySkin.m_qRotLocal = bodySkin.obj_tr.localRotation);
 			bodySkin.m_vDefScaleLocal = (bodySkin.m_vScaleRate = bodySkin.obj_tr.localScale);
+			SafeSlotID safeSlotID = bodySkin.SlotId.ToSafeSlotID();
 			if (!f_bTemp
-				&& (   bodySkin.SlotId == TBody.SlotID.accHat
-					|| bodySkin.SlotId == TBody.SlotID.headset
-					|| bodySkin.SlotId == TBody.SlotID.hairT
-					|| bodySkin.SlotId == TBody.SlotID.accSenaka
-					|| bodySkin.SlotId == TBody.SlotID.accKubi
-					|| bodySkin.SlotId == TBody.SlotID.accKubiwa
-					|| bodySkin.SlotId == TBody.SlotID.accShippo
-					|| bodySkin.SlotId == TBody.SlotID.accKubiwa))
+				&& (   safeSlotID == SafeSlotID.accHat
+					|| safeSlotID == SafeSlotID.headset
+					|| safeSlotID == SafeSlotID.hairT
+					|| safeSlotID == SafeSlotID.accSenaka
+					|| safeSlotID == SafeSlotID.accKubi
+					|| safeSlotID == SafeSlotID.accKubiwa
+					|| safeSlotID == SafeSlotID.accShippo
+					|| safeSlotID == SafeSlotID.accKubiwa))
 			{
 				SkinnedMeshRenderer componentInChildren = bodySkin.obj_tr.GetComponentInChildren<SkinnedMeshRenderer>(includeInactive: true);
 				if (componentInChildren != null)
@@ -471,7 +399,7 @@ namespace COM3D2.LiveLink.Plugin
 			}
 			bodySkin.m_HairLengthCtrl.NotExistThenClearHairLength();
 			if (OvrIK.IsModeVRIK && OvrIK.Instance != null && OvrIK.Instance.NowMaid == bodySkin.body.maid 
-				&& (bodySkin.SlotId == TBody.SlotID.head || bodySkin.SlotId == TBody.SlotID.megane || bodySkin.SlotId == TBody.SlotID.accHead))
+				&& (safeSlotID == SafeSlotID.head || safeSlotID == SafeSlotID.megane || safeSlotID == SafeSlotID.accHead))
 			{
 				bodySkin.LayerCheck(bodySkin.obj);
 			}

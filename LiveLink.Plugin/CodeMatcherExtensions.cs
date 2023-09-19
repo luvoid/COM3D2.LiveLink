@@ -1,22 +1,27 @@
 ﻿using BepInEx.Logging;
 using HarmonyLib;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
+using UnityEngine;
 
 namespace COM3D2.LiveLink.Plugin
 {
 	internal static class CodeMatcherExtensions
 	{
 		/// <exception cref="InvalidOperationException"></exception>
-		public static void LogOrThrowMatch(this CodeMatcher transpileHead, MethodInfo method, string nameofMatch, ManualLogSource logger)
+		public static void LogOrThrowMatch(this CodeMatcher transpileHead, MethodInfo method, string nameofMatch, ManualLogSource logger = null)
 		{
-			if (transpileHead.ReportFailure(method, logger.LogError))
+			Action<string> logError = logger != null ? logger.LogError : Console.Error.WriteLine;
+			Action<string> logDebug = logger != null ? logger.LogDebug : Console.Error.WriteLine;
+
+			if (transpileHead.ReportFailure(method, logError))
+			{
 				throw new InvalidOperationException($"Could not find {nameofMatch} while transpiling {method}");
+			}
 			else
-				logger.LogDebug($"{nameofMatch}  @  IL_{transpileHead.Pos:X04}: {transpileHead.Instruction}");
+			{
+				logDebug($"{nameofMatch}  @  OP_{transpileHead.Pos:X04}: {transpileHead.Instruction}");
+			}
 		}
 	}
 }

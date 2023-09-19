@@ -17,6 +17,7 @@ using UnityEngine.UI;
 using UniverseLib;
 using UniverseLib.UI;
 using CM3D2.UGUI;
+using System;
 
 
 // If there are errors in the above using statements, restore the NuGet packages:
@@ -42,7 +43,7 @@ namespace COM3D2.LiveLink.Plugin
 		// The name of this plugin.
 		internal const string PLUGIN_NAME = "LiveLink";
 		// The version of this plugin.
-		internal const string PLUGIN_VERSION = "1.1.0";
+		internal const string PLUGIN_VERSION = "1.1.2";
 
 		public static readonly string Guid = PLUGIN_GUID;
 		public static readonly string Name = PLUGIN_NAME;
@@ -80,6 +81,7 @@ namespace COM3D2.LiveLink.Plugin
 
 		internal UIBase PluginUIBase;
 
+		private static Harmony harmony;
 		private void Awake()
 		{
 			Instance = this;
@@ -96,9 +98,17 @@ namespace COM3D2.LiveLink.Plugin
 
 			Config.BindToConfigFile(ConfigFile);
 
-			// Installs the patches in the BlenderLiveLink class.
-			Harmony.CreateAndPatchAll(typeof(LiveLinkPlugin));
-			Harmony.CreateAndPatchAll(typeof(ImportCMExtensions));
+			// Installs the patches in the LiveLink class.
+			harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+			harmony.PatchAll(typeof(LiveLinkPlugin));
+			try
+			{
+				ImportCMExtensions.Patch(harmony);
+			}
+			catch (System.Exception ex)
+			{
+				Logger.LogError(ex);
+			}
 
 			new GameObject("LiveLinkDirector", typeof(LiveLinkDirector)).transform.SetParent(this.transform, false);
 
