@@ -64,8 +64,8 @@ namespace COM3D2.LiveLink.Plugin
 		public static LiveLinkPlugin Instance { get; private set; }
 
 		// Static property for the logger so you can log from other classes.
-		internal static new ManualLogSource Logger => Instance?._Logger;
-		private ManualLogSource _Logger => base.Logger;
+		internal static new ManualLogSource Logger => Instance?._logger;
+		private ManualLogSource _logger => base.Logger;
 
 		private LiveLinkCore m_Core = new LiveLinkCore();
 

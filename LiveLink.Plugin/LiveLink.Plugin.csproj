@@ -16,6 +16,8 @@
     <OutputPath>bin\$(Configuration)\$(Platform)</OutputPath>
     <StartProgram>$(COM3D2InstallPath)\COM3D2x64.exe</StartProgram>
     <Configurations>Debug;Release;Debug_UnityEditor</Configurations>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -48,7 +50,7 @@
     <PackageReference Include="BepInEx.BaseLib" Version="5.4.21" targetFramework="net35" />
     <PackageReference Include="BepInEx.Core" Version="5.4.19" targetFramework="net35" />
     <PackageReference Include="HarmonyX" Version="2.9.0" targetFramework="net35" />
-    <PackageReference Include="LuVoid.CM3D2.UGUI" Version="0.1.4-alpha.1" targetFramework="net35">
+    <PackageReference Include="LuVoid.CM3D2.UGUI" Version="0.1.4-alpha.2" targetFramework="net35">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>compile;runtime</IncludeAssets>
     </PackageReference>
@@ -59,7 +61,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp" Publicize="true">
-      <HintPath>$(COM3D2InstallPath)\COM3D2x64_Data\Managed\Assembly-CSharp.3.31.dll</HintPath>
+      <HintPath>lib\Assembly-CSharp.3.31.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
@@ -109,21 +111,9 @@
   <PropertyGroup>
     <PostBuildEvent Condition=" '$(Configuration)' != 'Debug_UnityEditor' ">
       for /f "usebackq delims=|" %25%25f in (`dir /b *.dll`) do "$(ProjectDir)\pdb2mdb.exe" "%25%25f" 1&gt;nul
-      rd "$(COM3D2InstallPath)\BepinEx\plugins\vsout_$(ProjectName)"
-      mklink /J "$(COM3D2InstallPath)\BepinEx\plugins\vsout_$(ProjectName)" .
+      rd "$(COM3D2InstallPath)\BepinEx\plugins\vsout_$(AssemblyName)"
+      mklink /J "$(COM3D2InstallPath)\BepinEx\plugins\vsout_$(AssemblyName)" .
     </PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <Deterministic>False</Deterministic>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_UnityEditor|AnyCPU'">
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <Deterministic>False</Deterministic>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <Deterministic>False</Deterministic>
   </PropertyGroup>
   <Target Name="CreateMonoDebugSymbols" AfterTargets="build" Condition="'$(Configuration)' == 'Debug_UnityEditor'">
     <Exec Command="for /f &quot;usebackq delims=|&quot; %25%25f in (`dir /b *.dll`) do &quot;$(ProjectDir)lib\pdb2mdb.exe&quot; %25%25f" WorkingDirectory="$(OutputPath)" />

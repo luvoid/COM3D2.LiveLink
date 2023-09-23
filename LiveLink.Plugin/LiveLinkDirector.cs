@@ -103,7 +103,7 @@ namespace COM3D2.LiveLink.Plugin
 		internal void SetAnimation(byte[] anmData)
 		{
 			TargetMaid.body0.GetAnimation().Stop();
-			TargetMaid.body0.CrossFade("LiveLinkAnimator", anmData, loop: true, fade: 0.1f);
+			TargetMaid.body0.CrossFade("LiveLinkAnimator", anmData, additive: false, loop: true, fade: 0.1f);
 		}
 
 
